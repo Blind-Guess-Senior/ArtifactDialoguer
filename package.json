@@ -1,0 +1,21 @@
+﻿{
+  "name": "com.blind-guess-senior.artifactdialoguer",
+  "version": "1.0.0",
+  "displayName": "Artifact Dialoguer",
+  "description": "A dialogue system core that is compiled before runtime.",
+  "unity": "6000.0",
+  "documentationUrl": "",
+  "changelogUrl": "",
+  "licensesUrl": "https://mit-license.org/",
+  "hideInEditor": false,
+  "dependencies": {
+  },
+  "keywords": [
+    "dialogue"
+  ],
+  "author": {
+    "name": "Blind Guess Senior",
+    "email": "Blind-Guess-Senior@outlook.com",
+    "url": "https://github.com/Blind-Guess-Senior/ArtifactDialoguer"
+  }
+}
