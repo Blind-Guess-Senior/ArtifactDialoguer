@@ -57,6 +57,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Tests.Editor
                 so.Namespace = story.Namespace;
                 so.ScopeVars = story.ScopeVars?.ToList() ?? new System.Collections.Generic.List<string>();
                 so.Blocks = story.Blocks;
+                so.name = story.Namespace;
 
                 string path = $"Assets/Resources/ArtiDialogue/{story.Namespace}.asset";
 

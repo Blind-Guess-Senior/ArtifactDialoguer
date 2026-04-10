@@ -32,6 +32,7 @@ namespace Editor.Compiler
                 so.Namespace = story.Namespace;
                 so.ScopeVars = story.ScopeVars.ToList();
                 so.Blocks = story.Blocks;
+                so.name = story.Namespace;
 
                 string path = $"Assets/Resources/ArtiDialogue/{story.Namespace}.asset";
 
