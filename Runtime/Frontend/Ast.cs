@@ -5,8 +5,6 @@ using UnityEngine;
 
 namespace BlindGuessSenior.ArtifactDialoguer.Frontend
 {
-    // TODO: internal commands: goto, if var cond, extcall
-
     [System.Serializable]
     public abstract class Node
     {
@@ -30,7 +28,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         /// <summary>
         /// All blocks of this story node.
         /// </summary>
-        public readonly List<BlockNode> Blocks = new();
+        [SerializeReference] public readonly List<BlockNode> Blocks = new();
 
         /// <summary>
         /// All scope variables definition.
@@ -90,12 +88,12 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         /// <summary>
         /// Previous block node in natural flow.
         /// </summary>
-        public BlockNode NaturalPrevious;
+        [SerializeReference] public BlockNode NaturalPrevious;
 
         /// <summary>
         /// Next block node in natural flow.
         /// </summary>
-        public BlockNode NaturalNext;
+        [SerializeReference] public BlockNode NaturalNext;
 
         /// <summary>
         /// Statement nodes of this block node.
@@ -156,12 +154,15 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         #endregion
     }
 
+    /// <summary>
+    /// Goto command node for jumping to another dialogue block.
+    /// </summary>
     [System.Serializable]
     public sealed class GotoCommandNode : CommandNode
     {
         #region Fields
 
-        public BlockNode ToBlock;
+        [SerializeReference] public BlockNode ToBlock;
 
         #endregion
 
@@ -174,12 +175,15 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         #endregion
     }
 
+    /// <summary>
+    /// Return command node for jumping backward to block that call current block.
+    /// </summary>
     [System.Serializable]
     public sealed class RetCommandNode : CommandNode
     {
         #region Fields
 
-        public readonly BlockNode BelongsToBlock;
+        [SerializeReference] public readonly BlockNode BelongsToBlock;
 
         #endregion
 
@@ -193,6 +197,9 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         #endregion
     }
 
+    /// <summary>
+    /// Null command node for no operation needed.
+    /// </summary>
     [System.Serializable]
     public sealed class NullCommandNode : CommandNode
     {
@@ -201,6 +208,9 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         }
     }
 
+    /// <summary>
+    /// Set command node for set a value for a variable. 
+    /// </summary>
     [System.Serializable]
     public sealed class SetCommandNode : CommandNode
     {
@@ -224,6 +234,9 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         #endregion
     }
 
+    /// <summary>
+    /// Set command node for set a value for a global variable. 
+    /// </summary>
     [System.Serializable]
     public sealed class GlobalSetCommandNode : CommandNode
     {
@@ -351,6 +364,9 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         #endregion
     }
 
+    /// <summary>
+    /// Class for options group.
+    /// </summary>
     [System.Serializable]
     public sealed class OptionsNode : StatementNode
     {
@@ -369,6 +385,9 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         #endregion
     }
 
+    /// <summary>
+    /// Struct for an option in an options group.
+    /// </summary>
     [System.Serializable]
     public struct OptionOfNode
     {
@@ -403,11 +422,17 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         #endregion
     }
 
+    /// <summary>
+    /// Abstract class for expression node that representing a value.
+    /// </summary>
     [System.Serializable]
     public abstract class ExpressionNode : Node
     {
     }
 
+    /// <summary>
+    /// A value of type int.
+    /// </summary>
     [System.Serializable]
     public sealed class IntValueNode : ExpressionNode
     {
@@ -419,6 +444,9 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         }
     }
 
+    /// <summary>
+    /// A value of type float.
+    /// </summary>
     [System.Serializable]
     public sealed class FloatValueNode : ExpressionNode
     {
@@ -430,21 +458,33 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         }
     }
 
+    /// <summary>
+    /// A value of type bool true.
+    /// </summary>
     [System.Serializable]
     public sealed class TrueValueNode : ExpressionNode
     {
     }
 
+    /// <summary>
+    /// A value of type bool false.
+    /// </summary>
     [System.Serializable]
     public sealed class FalseValueNode : ExpressionNode
     {
     }
 
+    /// <summary>
+    /// A value reference to a variable.
+    /// </summary>
     [System.Serializable]
     public sealed class VarRefNode : ExpressionNode
     {
         #region Fields
 
+        /// <summary>
+        /// Name of variable that this node refer to.
+        /// </summary>
         public string Ref;
 
         #endregion
