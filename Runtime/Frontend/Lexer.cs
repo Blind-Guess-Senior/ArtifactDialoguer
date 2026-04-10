@@ -1,6 +1,8 @@
 ﻿// ReSharper disable CheckNamespace
 
 using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace BlindGuessSenior.ArtifactDialoguer.Frontend
 {
@@ -11,47 +13,71 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         Return,
         Extcall,
 
-        // Attribute Keywords
-        Once,
-        Unreach,
-        Cycle,
+        // Variable Command Keywords
+        Set,
+
+        // Attribute
+        Attribute,
+        If,
 
         // Expr Keywords
         Null,
-        Set,
-        If,
 
 
         // Symbols
         // Pound, // #
         // LBrace, // {
         // RBrace, // }
-        // LParen, // (
-        // RParen, // )
+        LParen, // (
+        RParen, // )
+
         // Slash, // /
+        // LBracket, // [
+        // RBracket, // ]
         At, // @
-        LBracket, // [
-        RBracket, // ]
         Colon, // :
         DoubleColon, // ::
         Question, // ?
         Arrow, // ->
+        Equal, // =
 
+        // Operators
+        Addition, // +
+        Subtraction, // -
+        Multiplication, // *
+        Division, // /
+        Modulus, // %
+
+        DoubleEqual, // ==
+        NotEqual, // !=
+        LessThan, // <
+        LessThanEqual, // <=
+        GreaterThan, // >
+        GreaterThanEqual, // >=
 
         // Other
         EOF,
         Illegal,
+        BlockDecl,
         Text,
         CrossText,
-        CommandText,
+
+        CommandIdent,
+        CommandInt,
+        CommandFloat,
+        CommandTrue,
+        CommandFalse,
+
+        // Special
+        Empty,
     }
 
     public struct Token
     {
         public readonly TokenType Type;
-        public string Literal;
-        public int Line;
-        public int Column;
+        public readonly string Literal;
+        public readonly int Line;
+        public readonly int Column;
 
         public Token(TokenType type, string literal, int line, int column)
         {
@@ -105,6 +131,11 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         private bool _isCommandContext;
 
         /// <summary>
+        /// Whether it is in a expression context in a command. (around by "()")
+        /// </summary>
+        private bool _isCommandExprContext;
+
+        /// <summary>
         /// Whether current context is start in very head of a line.
         /// </summary>
         private bool _isLineStart = true;
@@ -112,19 +143,25 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         /// <summary>
         /// Keywords map.
         /// </summary>
-        private static readonly Dictionary<string, TokenType> Keywords = new Dictionary<string, TokenType>
+        private static readonly Dictionary<string, TokenType> Keywords = new()
         {
             { "goto", TokenType.Goto },
-            { "return", TokenType.Return },
+            { "ret", TokenType.Return },
             { "extcall", TokenType.Extcall },
 
-            { "once", TokenType.Once },
-            { "unreach", TokenType.Unreach },
-            { "cycle", TokenType.Cycle },
+            { "set", TokenType.Set },
+
+            { "once", TokenType.Attribute },
+            { "unreach", TokenType.Attribute },
+            { "cycle", TokenType.Attribute },
 
             { "null", TokenType.Null },
-            { "set", TokenType.Set },
             { "if", TokenType.If },
+
+            { "empty", TokenType.Empty },
+
+            { "true", TokenType.CommandTrue },
+            { "false", TokenType.CommandFalse },
         };
 
         #endregion
@@ -186,12 +223,6 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
             switch (_ch)
             {
                 // Unused
-                // case '(':
-                //     tok = new Token(TokenType.LParen, _ch.ToString(), _line, startColumn);
-                //     break;
-                // case ')':
-                //     tok = new Token(TokenType.RParen, _ch.ToString(), _line, startColumn);
-                //     break;
                 // case '/':
                 //     tok = new Token(TokenType.Slash, _ch.ToString(), _line, startColumn);
                 //     break;
@@ -228,13 +259,108 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
                         ReadChar(); // consume '-'
                         tok = new Token(TokenType.Arrow, "->", _line, startColumn);
                     }
-                    else
+                    else if (!_isCommandContext)
                     {
                         tok = new Token(TokenType.Illegal, "Unexpected hyphen '-'. Do you missing '>'?", _line,
                             startColumn);
                     }
+                    else
+                    {
+                        tok = new Token(TokenType.Subtraction, "-", _line, startColumn);
+                    }
 
                     break;
+                case '(':
+                    if (_isCommandContext)
+                    {
+                        tok = new Token(TokenType.LParen, "(", _line, startColumn);
+                        break;
+                    }
+
+                    goto default;
+                case ')':
+                    if (_isCommandContext)
+                    {
+                        tok = new Token(TokenType.RParen, ")", _line, startColumn);
+                        break;
+                    }
+
+                    goto default;
+                case '*':
+                    if (_isCommandContext)
+                    {
+                        tok = new Token(TokenType.Multiplication, "*", _line, startColumn);
+                        break;
+                    }
+
+                    goto default;
+                case '+':
+                    if (_isCommandContext)
+                    {
+                        tok = new Token(TokenType.Addition, "+", _line, startColumn);
+                        break;
+                    }
+
+                    goto default;
+                case '/':
+                    if (_isCommandContext)
+                    {
+                        tok = new Token(TokenType.Division, "/", _line, startColumn);
+                        break;
+                    }
+
+                    goto default;
+                case '%':
+                    if (_isCommandContext)
+                    {
+                        tok = new Token(TokenType.Modulus, "%", _line, startColumn);
+                        break;
+                    }
+
+                    goto default;
+                case '<':
+                    if (_isCommandContext)
+                    {
+                        if (PeekChar() == '=')
+                        {
+                            ReadChar();
+                            tok = new Token(TokenType.LessThanEqual, "<=", _line, startColumn);
+                        }
+                        else
+                        {
+                            tok = new Token(TokenType.LessThan, "<", _line, startColumn);
+                        }
+
+                        break;
+                    }
+
+                    goto default;
+                case '>':
+                    if (_isCommandContext)
+                    {
+                        if (PeekChar() == '=')
+                        {
+                            ReadChar();
+                            tok = new Token(TokenType.GreaterThanEqual, ">=", _line, startColumn);
+                        }
+                        else
+                        {
+                            tok = new Token(TokenType.GreaterThan, ">", _line, startColumn);
+                        }
+
+                        break;
+                    }
+
+                    goto default;
+                case '!':
+                    if (_isCommandContext && PeekChar() == '=')
+                    {
+                        ReadChar();
+                        tok = new Token(TokenType.NotEqual, "!=", _line, startColumn);
+                        break;
+                    }
+
+                    goto default;
 
                 // Check if there is a cross-line text
                 case '{':
@@ -273,7 +399,6 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
 
                 // Check if there is a command context
                 case '[':
-                    _isLineStart = false;
                     if (_isCommandContext)
                     {
                         tok = new Token(TokenType.Illegal, "Invalid nested bracket '['.", _line, startColumn);
@@ -281,10 +406,9 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
                     }
 
                     _isCommandContext = true;
-                    tok = new Token(TokenType.LBracket, "[", _line, startColumn);
-                    break;
+                    ReadChar(); // Consume '['
+                    return NextToken();
                 case ']':
-                    _isLineStart = false;
                     if (!_isCommandContext)
                     {
                         tok = new Token(TokenType.Illegal, "Unexpected right bracket ']'.", _line, startColumn);
@@ -292,7 +416,32 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
                     }
 
                     _isCommandContext = false;
-                    tok = new Token(TokenType.RBracket, "]", _line, startColumn);
+                    ReadChar(); // Consume ']'
+                    return NextToken();
+
+                // case '(':
+                //     tok = new Token(TokenType.LParen, _ch.ToString(), _line, startColumn);
+                //     break;
+                // case ')':
+                //     tok = new Token(TokenType.RParen, _ch.ToString(), _line, startColumn);
+                //     break;
+
+                case '=':
+                    if (PeekChar() == '=')
+                    {
+                        ReadChar(); // consume '='
+                        tok = new Token(TokenType.DoubleEqual, "==", _line, startColumn);
+                    }
+                    else if (_isCommandContext)
+                    {
+                        tok = new Token(TokenType.Equal, "=", _line, startColumn);
+                    }
+                    else
+                    {
+                        tok = new Token(TokenType.Illegal, "Unexpected equal '='. Do you missing '='?", _line,
+                            startColumn);
+                    }
+
                     break;
 
                 // Check if file ends.
@@ -308,17 +457,32 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
                     {
                         var text = ReadText(true);
                         _isLineStart = false;
+                        if (_ch == ':')
+                        {
+                            ReadChar();
+                            return new Token(TokenType.BlockDecl, text, _line, startColumn);
+                        }
+
                         // Avoid calling ReadChar at the end, as ReadText stops exactly at the char that broke the loop
                         return new Token(TokenType.Text, text, _line, startColumn);
                     }
 
                     // Common text. Split by whitespace.
                     // Common text will include some key symbols that do not appear in the first char.
-                    if (IsTextFirstChar(_ch))
+                    if (IsTextFirstChar(_ch, _isCommandContext))
                     {
                         var text = ReadText(false);
                         var type = LookupKeywordOrText(text);
-                        _isLineStart = false;
+                        if (type is not TokenType.Attribute)
+                        {
+                            _isLineStart = false;
+                        }
+
+                        if (type == TokenType.Empty)
+                        {
+                            return new Token(TokenType.Text, "", _line, startColumn);
+                        }
+
                         // Avoid calling ReadChar at the end, as ReadText stops exactly at the char that broke the loop
                         return new Token(type, text, _line, startColumn);
                     }
@@ -359,7 +523,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
                 // We consume the first char immediately, and we also consider the first char part of the text.
                 // It was already validated by IsTextFirstChar.
                 ReadChar();
-                while (IsTextSubsequentChar(_ch))
+                while (IsTextSubsequentChar(_ch, _isCommandContext))
                 {
                     ReadChar();
                 }
@@ -401,6 +565,8 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
                     {
                         ReadChar();
                     }
+
+                    _isLineStart = true;
                 }
                 else
                 {
@@ -415,11 +581,30 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         /// Check if current char is text. Special check condition for very first char in a text.
         /// </summary>
         /// <param name="ch">The char to check.</param>
+        /// <param name="isCommandContext">Is the lexer in command context currently.</param>
         /// <returns>True if given char is text; otherwise, false.</returns>
-        private static bool IsTextFirstChar(char ch)
+        private static bool IsTextFirstChar(char ch, bool isCommandContext)
         {
             if (ch == '\0' || char.IsWhiteSpace(ch))
                 return false;
+
+            if (isCommandContext)
+            {
+                switch (ch)
+                {
+                    case '(':
+                    case ')':
+                    case '=':
+                    case '+':
+                    case '*':
+                    case '/':
+                    case '%':
+                    case '<':
+                    case '>':
+                    case '!':
+                        return false;
+                }
+            }
 
             switch (ch)
             {
@@ -443,11 +628,30 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         /// Check if current char is text. Check condition for non-first char in a text.
         /// </summary>
         /// <param name="ch">The char to check.</param>
+        /// <param name="isCommandContext">Is the lexer in command context currently.</param>
         /// <returns>True if given char is text; otherwise, false.</returns>
-        private static bool IsTextSubsequentChar(char ch)
+        private static bool IsTextSubsequentChar(char ch, bool isCommandContext)
         {
             if (ch == '\0' || char.IsWhiteSpace(ch))
                 return false;
+
+            if (isCommandContext)
+            {
+                switch (ch)
+                {
+                    case '(':
+                    case ')':
+                    case '=':
+                    case '+':
+                    case '*':
+                    case '/':
+                    case '%':
+                    case '<':
+                    case '>':
+                    case '!':
+                        return false;
+                }
+            }
 
             switch (ch)
             {
@@ -480,6 +684,27 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
             return ch is >= '0' and <= '9';
         }
 
+        private static bool IsNumber(string input)
+        {
+            return IsInteger(input) || IsDecimal(input);
+        }
+
+        private static bool IsInteger(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return false;
+
+            return Regex.IsMatch(input, @"^[+-]?\d+$");
+        }
+
+        private static bool IsDecimal(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return false;
+
+            return Regex.IsMatch(input, @"^[+-]?\d+\.\d+$");
+        }
+
         /// <summary>
         /// Get ident's type.
         /// </summary>
@@ -491,12 +716,19 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         /// </returns>
         private TokenType LookupKeywordOrText(string ident)
         {
-            return _isCommandContext switch
+            if (!_isCommandContext) return TokenType.Text;
+
+            if (Keywords.TryGetValue(ident, out TokenType type))
             {
-                true when Keywords.TryGetValue(ident, out TokenType type) => type,
-                true => TokenType.CommandText,
-                false => TokenType.Text
-            };
+                return type;
+            }
+
+            if (IsNumber(ident))
+            {
+                return IsInteger(ident) ? TokenType.CommandInt : TokenType.CommandFloat;
+            }
+
+            return TokenType.CommandIdent;
         }
 
         #endregion
@@ -520,8 +752,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
                 tokens.Add(tok);
                 tok = lexer.NextToken();
             }
-            // Optionally add EOF token to the list:
-            // tokens.Add(tok);
+            tokens.Add(tok);
 
             return tokens;
         }
