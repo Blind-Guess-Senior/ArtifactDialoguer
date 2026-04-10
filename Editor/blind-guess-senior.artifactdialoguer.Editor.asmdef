@@ -1,3 +1,4 @@
 {
-	"name": "blind-guess-senior.artifactdialoguer.Editor"
+	"name": "blind-guess-senior.artifactdialoguer.Editor",
+	"references":[ "GUID:4930306c7c88c2f43a6568de529d9fd9" ]
 }
