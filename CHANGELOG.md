@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Asset importer for specified .artidial file extension
 - Simple ScriptedObject storage for compiled dialogue
 - Editor tools for compile all dialogue
+- Dialogue runner VM implementation
 - 
 
 ### Changed
