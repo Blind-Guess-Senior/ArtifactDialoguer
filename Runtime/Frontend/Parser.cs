@@ -374,6 +374,10 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
             }
         }
 
+        /// <summary>
+        /// Parser for Blocks rule.
+        /// </summary>
+        /// <param name="namespaceStory">The node that blocks mount to.</param>
         private void ParseBlocks(NamespaceStoryNode namespaceStory)
         {
             while (true)
@@ -397,6 +401,13 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
             }
         }
 
+        /// <summary>
+        /// Parser for Block rule.
+        /// </summary>
+        /// <param name="attributes">The attributes of this block.</param>
+        /// <returns>The parsed block node.</returns>
+        /// <exception cref="MultipleBlockDefinitionException"></exception>
+        /// <exception cref="ConflictAttributeException"></exception>
         private BlockNode ParseBlock(List<IDialogueAttribute> attributes)
         {
             var declToken = Match(TokenType.BlockDecl);
@@ -450,6 +461,13 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
             return block;
         }
 
+        /// <summary>
+        /// Parser for Expr rule. Parse statements and append them into block node's statements.
+        /// </summary>
+        /// <param name="statements">The statements to parse</param>
+        /// <exception cref="UnmatchedAttributeException">Occur when attribute unmatched.</exception>
+        /// <exception cref="IsolatedAttributeException">Occur when isolated attribute found.</exception>
+        /// <exception cref="UnexpectedTokenException">Occur when token is not in process range.</exception>
         private void ParseExpr(List<StatementNode> statements)
         {
             while (_currentToken.Type != TokenType.EOF &&
@@ -597,6 +615,11 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
             }
         }
 
+        /// <summary>
+        /// Parser for Option rule. Parse option group statement.
+        /// </summary>
+        /// <param name="optionAttributes">The attributes of this option.</param>
+        /// <exception cref="WrongOptionBodyException">Occur when option's body is not command.</exception>
         private void ParseOption(List<IDialogueAttribute> optionAttributes)
         {
             foreach (var attr in optionAttributes)
@@ -717,8 +740,14 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
             }
         }
 
+        /// <summary>
+        /// Parse value expression and return parsed expression node.
+        /// </summary>
+        /// <returns>The parsed expression node.</returns>
+        /// <exception cref="NoExpressionException">Occur when no expression found.</exception>
         private ExpressionNode ParseValueExpression()
         {
+            // TODO: complex value expression
             switch (_currentToken.Type)
             {
                 case TokenType.CommandInt:
@@ -778,6 +807,11 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
 
         #region Helper Methods
 
+        /// <summary>
+        /// Get block's identification name that can uniquely determine that block.
+        /// </summary>
+        /// <param name="tuple">The block and additional info. Item1 for namespace, Item2 for block token.</param>
+        /// <returns>The identification name of given block.</returns>
         private static string BlockIdentificationName(Tuple<string, Token> tuple)
             => $"_%{tuple.Item1}_%{tuple.Item2.Literal}";
 
@@ -788,8 +822,11 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
 
     public static class Parser
     {
-        // Process: Concatenate all tokens in the list end to end, and push them into parser.
-        //          Add initial namespace and initial block definition if feature toggled.
+        /// <summary>
+        /// Parse a sequence of token lists, and return parsed nodes.
+        /// </summary>
+        /// <param name="allTokens">The sequence of token lists to parse.</param>
+        /// <returns>The parsed nodes.</returns>
         public static List<NamespaceStoryNode> Parse(IEnumerable<List<Token>> allTokens)
         {
             var parser = new ParserInstance();
