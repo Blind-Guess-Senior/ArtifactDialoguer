@@ -10,14 +10,9 @@ using Unity.VisualScripting.YamlDotNet.Core.Tokens;
 
 namespace BlindGuessSenior.ArtifactDialoguer.Frontend
 {
-    // TODO: Return only work when block is running under goto -> runtime
     // TODO: Var usage check -> cfg LiveOut
-    // TODO: Common If expression operator -> lexer and parser 
-    // TODO: Set Var = Expr  .  Expr is simple combination of operator and var
-    // TODO: Command number with Type System
-    // TODO: Explicit command text, no number start
+    // TODO: Explicit command ident, no number start
     // TODO: () for Expr in common if expr. Like `if (cntA + cntB) == cntC`
-    // TODO: DO FIRST: simple if ==, simple Set Var Value, only int for var value
 
     /*
      * Story -> NamespaceAssignment Blocks Story
@@ -316,16 +311,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
             var token = _currentToken;
             if (_position < _tokens.Count - 1)
             {
-                // TODO: FIXME: remove try-catch 
-                try
-                {
-                    _currentToken = _tokens[++_position];
-                }
-                catch
-                {
-                    ArtifactDialoguerDebug.PackageLog(_position);
-                    throw;
-                }
+                _currentToken = _tokens[++_position];
             }
 
             return token;
@@ -434,6 +420,12 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
             // Reset current option group
             _currentOptions = null;
 
+            if (attributes.Any(attr => attr is UnreachAttribute) &&
+                attributes.Any(attr => attr is CycleAttribute))
+            {
+                throw new ConflictAttributeException(attributes.ToArray(), _currentToken);
+            }
+
             if (!attributes.Any(attr => attr is UnreachAttribute))
             {
                 if (_naturalPreviousBlock != null)
@@ -442,7 +434,15 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
                     block.NaturalPrevious = _naturalPreviousBlock;
                 }
 
-                _naturalPreviousBlock = block;
+                if (attributes.Any(attr => attr is CycleAttribute))
+                {
+                    block.NaturalNext = block;
+                    _naturalPreviousBlock = null;
+                }
+                else
+                {
+                    _naturalPreviousBlock = block;
+                }
             }
 
             ParseExpr(block.Statements);
@@ -800,7 +800,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
                 parser.ParseNamespaceStory();
             }
 
-            ArtifactDialoguerDebug.PackageLog($"Compile {tokens.Count} groups tokens.");
+            ArtifactDialoguerDebug.CompileLog($"Compile {tokens.Count} groups tokens.");
 
             return parser.CollectResult();
         }
