@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using BlindGuessSenior.ArtifactDialoguer.Utilities.Exceptions;
+using UnityEngine;
 
 // ReSharper disable CheckNamespace
 
@@ -10,6 +11,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         public void IsAllowed(Token token);
     }
 
+    [System.Serializable]
     public sealed class OnceAttribute : IDialogueAttribute
     {
         private readonly List<TokenType> _allowedTokens = new()
@@ -35,6 +37,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         }
     }
 
+    [System.Serializable]
     public sealed class CycleAttribute : IDialogueAttribute
     {
         private readonly List<TokenType> _allowedTokens = new()
@@ -51,6 +54,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         }
     }
 
+    [System.Serializable]
     public sealed class UnreachAttribute : IDialogueAttribute
     {
         private readonly List<TokenType> _allowedTokens = new()
@@ -67,6 +71,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         }
     }
 
+    [System.Serializable]
     public sealed class IfAttribute : IDialogueAttribute
     {
         private readonly List<TokenType> _allowedTokens = new()
@@ -91,9 +96,9 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
             }
         }
 
-        public ExpressionNode LHS;
+        [SerializeReference] public ExpressionNode LHS;
         public TokenType Operator;
-        public ExpressionNode RHS;
+        [SerializeReference] public ExpressionNode RHS;
 
         public IfAttribute(ExpressionNode lhs, TokenType @operator, ExpressionNode rhs)
         {

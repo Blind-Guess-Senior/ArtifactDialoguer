@@ -23,17 +23,17 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         /// <br/>
         /// Stories with same namespace will be process together.(Unfinished)
         /// </summary>
-        public readonly string Namespace;
+        public string Namespace;
 
         /// <summary>
         /// All blocks of this story node.
         /// </summary>
-        [SerializeReference] public readonly List<BlockNode> Blocks = new();
+        [SerializeReference] public List<BlockNode> Blocks = new();
 
         /// <summary>
         /// All scope variables definition.
         /// </summary>
-        public readonly List<string> ScopeVars = new();
+        public List<string> ScopeVars = new();
 
         #endregion
 
@@ -79,9 +79,9 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         /// <summary>
         /// Identification name of this block node.
         /// </summary>
-        public readonly string BlockName;
+        public string BlockName;
 
-        [SerializeReference] public readonly List<IDialogueAttribute> Attributes;
+        [SerializeReference] public List<IDialogueAttribute> Attributes;
 
         #endregion
 
@@ -98,13 +98,13 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         /// <summary>
         /// Statement nodes of this block node.
         /// </summary>
-        [SerializeReference] public readonly List<StatementNode> Statements = new();
+        [SerializeReference] public List<StatementNode> Statements = new();
 
         #endregion
 
         #region Constructor
 
-        private BlockNode(string blockName)
+        public BlockNode(string blockName)
         {
             BlockName = blockName;
         }
@@ -125,7 +125,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
     {
         #region Fields
 
-        [SerializeReference] public readonly List<IDialogueAttribute> Attributes;
+        [SerializeReference] public List<IDialogueAttribute> Attributes;
 
         #endregion
 
@@ -183,7 +183,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
     {
         #region Fields
 
-        [SerializeReference] public readonly BlockNode BelongsToBlock;
+        [SerializeReference] public BlockNode BelongsToBlock;
 
         #endregion
 
@@ -216,9 +216,9 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
     {
         #region Fields
 
-        public readonly string TargetVar;
+        public string TargetVar;
 
-        [SerializeReference] public readonly ExpressionNode ValueExpr;
+        [SerializeReference] public ExpressionNode ValueExpr;
 
         #endregion
 
@@ -242,8 +242,8 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
     {
         #region Fields
 
-        public readonly string TargetVar;
-        [SerializeReference] public readonly ExpressionNode ValueExpr;
+        public string TargetVar;
+        [SerializeReference] public ExpressionNode ValueExpr;
 
         #endregion
 
@@ -267,7 +267,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
     {
         #region Fields
 
-        public readonly string SpeakerName;
+        public string SpeakerName;
 
         #endregion
 
@@ -289,7 +289,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
     {
         #region Fields
 
-        public readonly string Speaker;
+        public string Speaker;
 
         #endregion
 
@@ -316,7 +316,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
     {
         #region Fields
 
-        public readonly string Content;
+        public string Content;
 
         #endregion
 
@@ -344,7 +344,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
     {
         #region Fields
 
-        public readonly List<string> Contents;
+        public List<string> Contents;
 
         #endregion
 
@@ -372,7 +372,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
     {
         #region Fields
 
-        public readonly List<OptionOfNode> Options = new();
+        public List<OptionOfNode> Options = new();
 
         #endregion
 
@@ -389,14 +389,14 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
     /// Struct for an option in an options group.
     /// </summary>
     [System.Serializable]
-    public struct OptionOfNode
+    public sealed class OptionOfNode : Node
     {
         #region Fields
 
         /// <summary>
         /// Attribute of this option.
         /// </summary>
-        [SerializeReference] public readonly List<IDialogueAttribute> Attributes;
+        [SerializeReference] public List<IDialogueAttribute> Attributes;
 
         /// <summary>
         /// The content to display of this option.
