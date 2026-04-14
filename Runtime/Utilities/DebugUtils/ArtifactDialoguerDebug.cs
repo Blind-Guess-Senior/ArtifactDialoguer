@@ -45,6 +45,18 @@ namespace BlindGuessSenior.ArtifactDialoguer.Utilities.DebugUtils
         private const string ArtifactCompileWarningHead =
             "<color=purple>Artifact Dialoguer</color>: <color=yellow>[Compile Warning]</color> ";
 
+        /// <summary>
+        /// String header to indicate that log is come from Artifact Dialoguer runtime.
+        /// </summary>
+        private const string ArtifactRuntimeHead =
+            "<color=purple>Artifact Dialoguer</color>: <color=yellow>[Runtime]</color> ";
+
+        private const string ArtifactRuntimeErrorHead =
+            "<color=purple>Artifact Dialoguer</color>: <color=yellow>[Runtime Error]</color> ";
+
+        private const string ArtifactRuntimeWarningHead =
+            "<color=purple>Artifact Dialoguer</color>: <color=yellow>[Runtime Warning]</color> ";
+
         #endregion
 
         #region Static Methods
@@ -115,6 +127,43 @@ namespace BlindGuessSenior.ArtifactDialoguer.Utilities.DebugUtils
                     break;
                 case DebugLogLevel.WorksWell:
                     Debug.Log($"{ArtifactCompileHead}<color=#32CD32>{message}</color>");
+                    break;
+                default:
+                    throw new ArgumentException("Wrong Debug Level type");
+            }
+        }
+
+
+        /// <summary>
+        /// Wrapped debug log function for package internal usage.
+        /// <br/>
+        /// It will be automatically disabled in the built release version.
+        /// </summary>
+        /// <param name="message">The message want to be logged. Same as using UnityEngine.Debug.Log().</param>
+        /// <param name="logLevel">The <see cref="DebugLogLevel"/> of log.</param>
+        /// <exception cref="ArgumentException">Occur when <see cref="DebugLogLevel"/> wrong.</exception>
+        [Conditional("UNITY_EDITOR")]
+        public static void RuntimeLog(object message, DebugLogLevel logLevel = DebugLogLevel.Info)
+        {
+            switch (logLevel)
+            {
+                case DebugLogLevel.Fatal:
+                    Debug.LogError($"{ArtifactRuntimeErrorHead}<color=#DC143C>{message}</color>");
+                    break;
+                case DebugLogLevel.Error:
+                    Debug.LogError($"{ArtifactRuntimeErrorHead}<color=#FF4500>{message}</color>");
+                    break;
+                case DebugLogLevel.Warning:
+                    Debug.LogWarning($"{ArtifactRuntimeWarningHead}<color=#FFA500>{message}</color>");
+                    break;
+                case DebugLogLevel.Info:
+                    Debug.Log($"{ArtifactRuntimeHead}<color=#6495ED>{message}</color>");
+                    break;
+                case DebugLogLevel.Hint:
+                    Debug.Log($"{ArtifactRuntimeHead}<color=#48D1CC>{message}</color>");
+                    break;
+                case DebugLogLevel.WorksWell:
+                    Debug.Log($"{ArtifactRuntimeHead}<color=#32CD32>{message}</color>");
                     break;
                 default:
                     throw new ArgumentException("Wrong Debug Level type");
