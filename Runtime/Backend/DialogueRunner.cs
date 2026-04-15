@@ -383,8 +383,59 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
         /// <returns>True if all conditions met; otherwise, false.</returns>
         private bool CheckConditions(List<IfAttribute> conditions)
         {
-            // TODO: check if conditions
+            foreach (var cond in conditions)
+            {
+                var lhs = EvaluateExpression(cond.LHS);
+                var op = cond.Operator;
+                var rhs = EvaluateExpression(cond.RHS);
+                if (!CompareResults(lhs, op, rhs))
+                {
+                    return false;
+                }
+            }
+
             return true;
+        }
+
+        /// <summary>
+        /// Helper method for compare two expression evaluate result.
+        /// </summary>
+        /// <param name="lhs">The left hand side result.</param>
+        /// <param name="op">The compare operator.</param>
+        /// <param name="rhs">The right hand side result.</param>
+        /// <returns>True if two result meet given relationship; otherwise, false.</returns>
+        private static bool CompareResults(ExpressionEvaluateResult lhs, TokenType op, ExpressionEvaluateResult rhs)
+        {
+            var leftType = lhs.Item1;
+            var rightType = rhs.Item1;
+            var leftObject = lhs.Item2;
+            var rightObject = rhs.Item2;
+
+            if (leftObject == null || rightObject == null)
+            {
+                return false;
+            }
+
+            if (leftType != rightType)
+            {
+                return false;
+            }
+
+            if (leftObject is IComparable compL && rightObject is IComparable compR)
+            {
+                var cmp = compL.CompareTo(compR);
+                switch (op)
+                {
+                    case TokenType.DoubleEqual: return cmp == 0;
+                    case TokenType.NotEqual: return cmp != 0;
+                    case TokenType.LessThan: return cmp < 0;
+                    case TokenType.LessThanEqual: return cmp <= 0;
+                    case TokenType.GreaterThan: return cmp > 0;
+                    case TokenType.GreaterThanEqual: return cmp >= 0;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -405,6 +456,16 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
                     return new ExpressionEvaluateResult(typeof(bool), true);
                 case FalseValueNode:
                     return new ExpressionEvaluateResult(typeof(bool), false);
+                case VarRefNode varRefNode:
+                    if (_dialogueState.Variables.TryGetValue(varRefNode.Ref, out var result))
+                    {
+                        return result;
+                    }
+
+                    ArtifactDialoguerDebug.RuntimeLog(
+                        $"Evaluate expression {expression} failed. No such variable {varRefNode.Ref} existed.",
+                        DebugLogLevel.Fatal);
+                    return new ExpressionEvaluateResult(null, null);
                 default:
                     ArtifactDialoguerDebug.RuntimeLog($"Evaluate expression {expression} failed.", DebugLogLevel.Fatal);
                     return new ExpressionEvaluateResult(null, null);
