@@ -1,0 +1,68 @@
+::MapVillage::
+
+start:
+@ villager1
+一些废话 必须单行
+一些废话
+一些废话
+
+
+secondDialogue:
+@ villager1
+一些没那么废话的话
+[once] 这句话只会出现一次
+
+[once] @ villager1
+这一大段都
+只会出现一次
+{这一段
+也是}
+[set hasA = 111]
+[set hasB = true]
+
+@ player
+some text
+[if hasA == 111] ? 选项一 -> [null]
+[if hasB == true] ? 选项二 -> [goto secondDialogue]
+[once] [if hasA == hasB] ? [empty] -> [if hasA == 1.1] [goto ifcond2]
+
+// 这是注释
+// empty表示空文本 null表示无内容，直接下一步
+
+[once] thirdDialogue:
+@ villager1
+一些看起来很高深的话
+@ [empty]
+这是一段旁白
+[set a746 = 1]
+
+
+[unreach] ifcond2:
+@ villager1
+{一些cross废话}
+
+// [extcall 一个外部函数]
+
+@ player
+? 选项 -> [goto ifcond3]
+
+
+[cycle] cycledDialogue:
+[once] [if hasA == true] [goto secondDialogue]
+@ villager1
+一些废话
+@ player
+{
+一些话 先显示
+一些话 触发（如点击屏幕）后显示
+一些话 触发（如点击屏幕）后显示
+在这里的会被视为纯文本
+}
+
+ifcond3:
+@ villager1
+总之又是一堆废话
+[ret]
+
+
+
