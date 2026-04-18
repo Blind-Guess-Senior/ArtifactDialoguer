@@ -11,6 +11,8 @@ using UnityEngine;
 namespace BlindGuessSenior.ArtifactDialoguer.Backend
 {
     using ExpressionEvaluateResult = Tuple<Type, object>;
+    // Item1 for block, Item2 for next statement index in block.
+    using CallStackEntry = Tuple<BlockNode, int>;
 
     /// <summary>
     /// Interface for dialogue runner.
@@ -36,7 +38,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
         {
             OnceStatement = new Dictionary<Node, bool>(),
             Variables = new Dictionary<string, ExpressionEvaluateResult>(),
-            CallStack = new Stack<BlockNode>(),
+            CallStack = new Stack<CallStackEntry>(),
         };
 
         /// <summary>
@@ -244,8 +246,14 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
 
                         goto Continue;
                     case RetCommandNode:
-                        _dialogueState.CurrentBlock = _dialogueState.CallStackPop();
-                        _dialogueState.CurrentBlockStatementIndex = 0;
+                        if (_dialogueState.CallStack.Count == 0)
+                        {
+                            break;
+                        }
+
+                        var ret = _dialogueState.CallStackPop();
+                        _dialogueState.CurrentBlock = ret.Item1;
+                        _dialogueState.CurrentBlockStatementIndex = ret.Item2;
 
                         goto Continue;
                     case NullCommandNode:
@@ -343,8 +351,9 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
                         break;
                     }
 
-                    _dialogueState.CurrentBlock = _dialogueState.CallStackPop();
-                    _dialogueState.CurrentBlockStatementIndex = 0;
+                    var ret = _dialogueState.CallStackPop();
+                    _dialogueState.CurrentBlock = ret.Item1;
+                    _dialogueState.CurrentBlockStatementIndex = ret.Item2;
                     break;
                 case NullCommandNode:
                     break;

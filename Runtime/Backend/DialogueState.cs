@@ -6,6 +6,8 @@ using BlindGuessSenior.ArtifactDialoguer.Frontend;
 
 namespace BlindGuessSenior.ArtifactDialoguer.Backend
 {
+    using CallStackEntry = Tuple<BlockNode, int>;
+    
     public class DialogueState
     {
         public BlockNode CurrentBlock;
@@ -17,12 +19,12 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
 
         public Dictionary<string, Tuple<Type, object>> Variables;
 
-        public Stack<BlockNode> CallStack;
+        public Stack<CallStackEntry> CallStack;
 
         public void CallStackPush()
-            => CallStack.Push(CurrentBlock);
+            => CallStack.Push(new CallStackEntry(CurrentBlock, CurrentBlockStatementIndex));
 
-        public BlockNode CallStackPop()
+        public CallStackEntry CallStackPop()
             => CallStack.Pop();
     }
 }
