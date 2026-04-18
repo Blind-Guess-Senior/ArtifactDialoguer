@@ -141,6 +141,11 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         private bool _isLineStart = true;
 
         /// <summary>
+        /// Whether current context is after a '?' token, it will cause a special text read condition.
+        /// </summary>
+        private bool _isOptionContext;
+
+        /// <summary>
         /// Keywords map.
         /// </summary>
         private static readonly Dictionary<string, TokenType> Keywords = new()
@@ -252,12 +257,14 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
                     break;
                 case '?':
                     tok = new Token(TokenType.Question, "?", _line, startColumn);
+                    _isOptionContext = true;
                     break;
                 case '-':
                     if (PeekChar() == '>')
                     {
                         ReadChar(); // consume '-'
                         tok = new Token(TokenType.Arrow, "->", _line, startColumn);
+                        _isOptionContext = false;
                     }
                     else if (!_isCommandContext)
                     {
@@ -270,22 +277,6 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
                     }
 
                     break;
-                case '(':
-                    if (_isCommandContext)
-                    {
-                        tok = new Token(TokenType.LParen, "(", _line, startColumn);
-                        break;
-                    }
-
-                    goto default;
-                case ')':
-                    if (_isCommandContext)
-                    {
-                        tok = new Token(TokenType.RParen, ")", _line, startColumn);
-                        break;
-                    }
-
-                    goto default;
                 case '*':
                     if (_isCommandContext)
                     {
@@ -407,7 +398,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
 
                     _isCommandContext = true;
                     ReadChar(); // Consume '['
-                    return NextToken();
+                    return NextToken(); // Do not set isLineStart
                 case ']':
                     if (!_isCommandContext)
                     {
@@ -417,14 +408,24 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
 
                     _isCommandContext = false;
                     ReadChar(); // Consume ']'
-                    return NextToken();
+                    return NextToken(); // Do not set isLineStart
 
-                // case '(':
-                //     tok = new Token(TokenType.LParen, _ch.ToString(), _line, startColumn);
-                //     break;
-                // case ')':
-                //     tok = new Token(TokenType.RParen, _ch.ToString(), _line, startColumn);
-                //     break;
+                case '(':
+                    if (_isCommandContext)
+                    {
+                        tok = new Token(TokenType.LParen, "(", _line, startColumn);
+                        break;
+                    }
+
+                    goto default;
+                case ')':
+                    if (_isCommandContext)
+                    {
+                        tok = new Token(TokenType.RParen, ")", _line, startColumn);
+                        break;
+                    }
+
+                    goto default;
 
                 case '=':
                     if (PeekChar() == '=')
@@ -455,15 +456,23 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
                     // Full line text will include whitespace and some key symbols.
                     if (wasLineStart && !_isCommandContext && _ch != '\0' && _ch != '\n' && _ch != '\r')
                     {
-                        var text = ReadText(true);
-                        _isLineStart = false;
-                        if (_ch == ':')
+                        if (TryReadBlockDecl(out var token))
                         {
-                            ReadChar();
-                            return new Token(TokenType.BlockDecl, text, _line, startColumn);
+                            return token;
                         }
 
+                        var text = ReadText(true);
+                        _isLineStart = false;
+
                         // Avoid calling ReadChar at the end, as ReadText stops exactly at the char that broke the loop
+                        return new Token(TokenType.Text, text, _line, startColumn);
+                    }
+
+                    if (_isOptionContext && _ch != '\0' && _ch != '\n' && _ch != '\r')
+                    {
+                        var text = ReadOptionText();
+                        _isOptionContext = false;
+
                         return new Token(TokenType.Text, text, _line, startColumn);
                     }
 
@@ -494,6 +503,75 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
             _isLineStart = false;
             ReadChar();
             return tok;
+        }
+
+        private bool TryReadBlockDecl(out Token blockDeclToken)
+        {
+            blockDeclToken = default;
+
+            var startColumn = _column;
+
+            // 使用临时位置向前探索，不影响当前的 _position
+            int tempPos = _position;
+
+            while (tempPos < _source.Length)
+            {
+                char lookaheadChar = _source[tempPos];
+
+                if (lookaheadChar == ':')
+                {
+                    if (tempPos + 1 < _source.Length && _source[tempPos + 1] == ':')
+                    {
+                        return false;
+                    }
+
+                    string text = _source.Substring(_position, tempPos - _position);
+
+                    if (string.IsNullOrWhiteSpace(text))
+                    {
+                        return false;
+                    }
+
+                    int consumeCount = (tempPos - _position) + 1;
+                    for (int i = 0; i < consumeCount; i++)
+                    {
+                        ReadChar();
+                    }
+
+                    blockDeclToken = new Token(TokenType.BlockDecl, text, _line, startColumn);
+                    return true;
+                }
+
+                switch (lookaheadChar)
+                {
+                    case ' ':
+                    case '\t':
+                    case '\n':
+                    case '\r':
+                    case '\0':
+                    case '(':
+                    case ')':
+                    case '=':
+                    case '+':
+                    case '-':
+                    case '*':
+                    case '/':
+                    case '%':
+                    case '<':
+                    case '>':
+                    case '!':
+                    case '[':
+                    case ']':
+                    case '{':
+                    case '}':
+                    case '?':
+                        return false;
+                }
+
+                tempPos++;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -527,6 +605,22 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
                 {
                     ReadChar();
                 }
+            }
+
+            return _source.Substring(position, _position - position);
+        }
+
+        /// <summary>
+        /// Read option text.
+        /// </summary>
+        /// <returns>Content that be read.</returns>
+        private string ReadOptionText()
+        {
+            int position = _position;
+
+            while (IsOptionContextChar(_ch))
+            {
+                ReadChar();
             }
 
             return _source.Substring(position, _position - position);
@@ -643,6 +737,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
                     case ')':
                     case '=':
                     case '+':
+                    case '-':
                     case '*':
                     case '/':
                     case '%':
@@ -657,7 +752,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
             {
                 case '[': // Command
                 case ']': // Command
-                case ':': // Block
+                case ':': // Block & Namespace
                 case '-': // Arrow
                     return false; // Only a few symbols interrupt normal text
                 default:
@@ -665,7 +760,29 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
             }
         }
 
+        /// <summary>
+        /// Check if current char is text. Check condition for char full-line text.
+        /// <br/>
+        /// Tips: Block will be process ahead of this check; and namespace's :: symbol will break full-line.
+        /// </summary>
+        /// <param name="ch">The char to check.</param>
+        /// <returns>True if given char is text; otherwise, false.</returns>
         private static bool IsFullLineTextChar(char ch)
+        {
+            if (ch == '\n' || ch == '\r' || ch == '\0')
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Check if current char is text. Check condition for char in option context.
+        /// </summary>
+        /// <param name="ch">The char to check.</param>
+        /// <returns>True if given char is text; otherwise, false.</returns>
+        private static bool IsOptionContextChar(char ch)
         {
             if (ch == '\n' || ch == '\r' || ch == '\0')
             {
@@ -674,7 +791,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
 
             return ch switch
             {
-                ':' => false, // Block
+                '-' => false,
                 _ => true
             };
         }
@@ -752,6 +869,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
                 tokens.Add(tok);
                 tok = lexer.NextToken();
             }
+
             tokens.Add(tok);
 
             return tokens;
