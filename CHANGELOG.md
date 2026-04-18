@@ -19,6 +19,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - 
 
+## [0.1.2] - 2026-04-18
+
+### Fixed
+
+- Tests will correctly use sample files in package folder rather than project folder
+- Return statements will now correctly return to the goto statement instead of the beginning of the block.
+- Return statements that are not within a goto context now do nothing, just like the behavior when selecting options.
+
 ## [0.1.1] - 2026-04-16
 
 ### Fixed
