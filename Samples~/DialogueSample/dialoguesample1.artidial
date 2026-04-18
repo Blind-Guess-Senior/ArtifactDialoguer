@@ -1,0 +1,30 @@
+::VNScope::
+
+start:
+@ System
+Welcome to the UI Migration Benchmark: Visual Novel Module.
+System initialization complete.
+
+@ AI Agent
+Are you ready to begin the migration sequence?
+
+? Yes, start the test. -> [goto test_sequence]
+? No, I need more time. ->[goto delay_sequence]
+
+test_sequence:
+@ AI Agent
+Excellent. Loading the UGUI Canvas...
+Parsing RectTransforms...
+Converting to UI Toolkit Flexbox...
+@ System
+Migration successful.
+[goto end]
+
+delay_sequence:
+@ AI Agent
+Take your time. The benchmark will wait.
+[goto end]
+
+end:
+@ System
+Test concluded.

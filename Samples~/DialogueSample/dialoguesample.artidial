@@ -9,7 +9,7 @@ start:
 
 secondDialogue:
 @ villager1
-一些没那么废话的话
+一些 没那么废话的话:
 [once] 这句话只会出现一次
 
 [once] @ villager1
@@ -22,8 +22,8 @@ secondDialogue:
 
 @ player
 some text
-[if hasA == 111] ? 选项一 -> [null]
-[if hasB == true] ? 选项二 -> [goto secondDialogue]
+[if hasA == 111] ? 选项 1 -> [null]
+[if hasB == true] ? 选项 2 -> [goto secondDialogue]
 [once] [if hasA == hasB] ? [empty] -> [if hasA == 1.1] [goto ifcond2]
 
 // 这是注释
