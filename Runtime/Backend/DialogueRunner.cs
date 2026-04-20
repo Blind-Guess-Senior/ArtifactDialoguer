@@ -22,6 +22,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
         public void Init();
         public IDialogueRuntimeResult Next();
         public IDialogueRuntimeResult OptionChosen(int index);
+        public IDialogueRuntimeResult OptionChosen(DialogueRuntimeResultOption option);
 
         public DialogueState ExportSave(bool blockLevelOnly = false);
 
