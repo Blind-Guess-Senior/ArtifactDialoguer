@@ -8,6 +8,12 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
     [System.Serializable]
     public abstract class Node
     {
+        public int NodeId;
+
+        protected Node(int nodeId)
+        {
+            NodeId = nodeId;
+        }
     }
 
     /// <summary>
@@ -18,11 +24,6 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
     {
         #region Fields
 
-        /// <summary>
-        /// Namespace of current story.
-        /// <br/>
-        /// Stories with same namespace will be process together.(Unfinished)
-        /// </summary>
         public string Namespace;
 
         /// <summary>
@@ -39,7 +40,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
 
         #region Constructor
 
-        public NamespaceStoryNode(string namespaceName)
+        public NamespaceStoryNode(int nodeId, string namespaceName) : base(nodeId)
         {
             Namespace = namespaceName;
         }
@@ -104,12 +105,12 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
 
         #region Constructor
 
-        public BlockNode(string blockName)
+        public BlockNode(int nodeId, string blockName) : base(nodeId)
         {
             BlockName = blockName;
         }
 
-        public BlockNode(string blockName, List<IDialogueAttribute> attributes) : this(blockName)
+        public BlockNode(int nodeId, string blockName, List<IDialogueAttribute> attributes) : this(nodeId, blockName)
         {
             Attributes = attributes;
         }
@@ -131,7 +132,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
 
         #region Constructor
 
-        protected StatementNode(List<IDialogueAttribute> attributes)
+        protected StatementNode(int nodeId, List<IDialogueAttribute> attributes) : base(nodeId)
         {
             Attributes = attributes;
         }
@@ -147,7 +148,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
     {
         #region Constructor
 
-        protected CommandNode(List<IDialogueAttribute> attributes) : base(attributes)
+        protected CommandNode(int nodeId, List<IDialogueAttribute> attributes) : base(nodeId, attributes)
         {
         }
 
@@ -168,7 +169,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
 
         #region Constructor
 
-        public GotoCommandNode(List<IDialogueAttribute> attributes) : base(attributes)
+        public GotoCommandNode(int nodeId, List<IDialogueAttribute> attributes) : base(nodeId, attributes)
         {
         }
 
@@ -189,7 +190,8 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
 
         #region Constructor
 
-        public RetCommandNode(BlockNode belongsTo, List<IDialogueAttribute> attributes) : base(attributes)
+        public RetCommandNode(int nodeId, BlockNode belongsTo, List<IDialogueAttribute> attributes) : base(nodeId,
+            attributes)
         {
             BelongsToBlock = belongsTo;
         }
@@ -203,7 +205,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
     [System.Serializable]
     public sealed class NullCommandNode : CommandNode
     {
-        public NullCommandNode() : base(null)
+        public NullCommandNode(int nodeId) : base(nodeId, null)
         {
         }
     }
@@ -224,8 +226,8 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
 
         #region Constructors
 
-        public SetCommandNode(string targetVar, ExpressionNode valueExpr, List<IDialogueAttribute> attributes) :
-            base(attributes)
+        public SetCommandNode(int nodeId, string targetVar, ExpressionNode valueExpr,
+            List<IDialogueAttribute> attributes) : base(nodeId, attributes)
         {
             TargetVar = targetVar;
             ValueExpr = valueExpr;
@@ -249,8 +251,8 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
 
         #region Constructors
 
-        public GlobalSetCommandNode(string targetVar, ExpressionNode valueExpr, List<IDialogueAttribute> attributes) :
-            base(attributes)
+        public GlobalSetCommandNode(int nodeId, string targetVar, ExpressionNode valueExpr,
+            List<IDialogueAttribute> attributes) : base(nodeId, attributes)
         {
             TargetVar = targetVar;
             ValueExpr = valueExpr;
@@ -273,7 +275,8 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
 
         #region Constructor
 
-        public SpeakerNode(string speakerName, List<IDialogueAttribute> attributes) : base(attributes)
+        public SpeakerNode(int nodeId, string speakerName, List<IDialogueAttribute> attributes) : base(nodeId,
+            attributes)
         {
             SpeakerName = speakerName;
         }
@@ -295,12 +298,13 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
 
         #region Constructor
 
-        protected GenericTextNode(string speaker) : base(null)
+        protected GenericTextNode(int nodeId, string speaker) : base(nodeId, null)
         {
             Speaker = speaker;
         }
 
-        protected GenericTextNode(string speaker, List<IDialogueAttribute> attributes) : base(attributes)
+        protected GenericTextNode(int nodeId, string speaker, List<IDialogueAttribute> attributes) : base(nodeId,
+            attributes)
         {
             Speaker = speaker;
         }
@@ -322,13 +326,13 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
 
         #region Constructor
 
-        public TextNode(string speaker, string content) : base(speaker)
+        public TextNode(int nodeId, string speaker, string content) : base(nodeId, speaker)
         {
             Content = content;
         }
 
-        public TextNode(string speaker, string content, List<IDialogueAttribute> attributes)
-            : base(speaker, attributes)
+        public TextNode(int nodeId, string speaker, string content, List<IDialogueAttribute> attributes)
+            : base(nodeId, speaker, attributes)
         {
             Content = content;
         }
@@ -350,13 +354,13 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
 
         #region Constructor
 
-        public CrossTextNode(string speaker, List<string> content) : base(speaker)
+        public CrossTextNode(int nodeId, string speaker, List<string> content) : base(nodeId, speaker)
         {
             Contents = content;
         }
 
-        public CrossTextNode(string speaker, List<string> content, List<IDialogueAttribute> attributes)
-            : base(speaker, attributes)
+        public CrossTextNode(int nodeId, string speaker, List<string> content, List<IDialogueAttribute> attributes)
+            : base(nodeId, speaker, attributes)
         {
             Contents = content;
         }
@@ -378,7 +382,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
 
         #region Constructors
 
-        public OptionsNode() : base(null)
+        public OptionsNode(int nodeId) : base(nodeId, null)
         {
         }
 
@@ -412,7 +416,8 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
 
         #region Constructors
 
-        public OptionOfNode(string displayContent, CommandNode command, List<IDialogueAttribute> attributes)
+        public OptionOfNode(int nodeId, string displayContent, CommandNode command,
+            List<IDialogueAttribute> attributes) : base(nodeId)
         {
             DisplayContent = displayContent;
             Command = command;
@@ -428,6 +433,9 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
     [System.Serializable]
     public abstract class ExpressionNode : Node
     {
+        protected ExpressionNode(int nodeId) : base(nodeId)
+        {
+        }
     }
 
     /// <summary>
@@ -438,7 +446,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
     {
         public int Value;
 
-        public IntValueNode(int value)
+        public IntValueNode(int nodeId, int value) : base(nodeId)
         {
             Value = value;
         }
@@ -452,7 +460,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
     {
         public float Value;
 
-        public FloatValueNode(float value)
+        public FloatValueNode(int nodeId, float value) : base(nodeId)
         {
             Value = value;
         }
@@ -464,6 +472,9 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
     [System.Serializable]
     public sealed class TrueValueNode : ExpressionNode
     {
+        public TrueValueNode(int nodeId) : base(nodeId)
+        {
+        }
     }
 
     /// <summary>
@@ -472,6 +483,9 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
     [System.Serializable]
     public sealed class FalseValueNode : ExpressionNode
     {
+        public FalseValueNode(int nodeId) : base(nodeId)
+        {
+        }
     }
 
     /// <summary>
@@ -491,7 +505,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
 
         #region Constructors
 
-        public VarRefNode(string @ref)
+        public VarRefNode(int nodeId, string @ref) : base(nodeId)
         {
             Ref = @ref;
         }

@@ -4,7 +4,6 @@ using System.Linq;
 using BlindGuessSenior.ArtifactDialoguer.Utilities.DebugUtils;
 using BlindGuessSenior.ArtifactDialoguer.Utilities.Exceptions;
 using NUnit.Framework;
-using Unity.VisualScripting.YamlDotNet.Core.Tokens;
 
 // ReSharper disable CheckNamespace
 
@@ -188,6 +187,11 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         /// </summary>
         private Token _currentToken;
 
+        /// <summary>
+        /// ID of next node.
+        /// </summary>
+        private int _nextNodeId;
+
         private readonly Dictionary<string, Type> _attributesMap = new()
         {
             { "once", typeof(OnceAttribute) },
@@ -243,7 +247,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         /// <summary>
         /// Temp storage for current attributes that will apply to next valid token.
         /// </summary>
-        private List<IDialogueAttribute> _currentAttributes = new();
+        private readonly List<IDialogueAttribute> _currentAttributes = new();
 
         // /// <summary>
         // /// All global variables.
@@ -360,7 +364,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
                 }
                 else
                 {
-                    story = new NamespaceStoryNode(namespaceToken.Literal);
+                    story = new NamespaceStoryNode(_nextNodeId++, namespaceToken.Literal);
                     _allNamespaceStories.Add(namespaceToken.Literal, story);
                 }
 
@@ -411,7 +415,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         private BlockNode ParseBlock(List<IDialogueAttribute> attributes)
         {
             var declToken = Match(TokenType.BlockDecl);
-            var block = new BlockNode(declToken.Literal, attributes);
+            var block = new BlockNode(_nextNodeId++, declToken.Literal, attributes);
 
             try
             {
@@ -519,7 +523,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
                         }
 
                         var speakerToken = Match(TokenType.Text);
-                        var speakerNode = new SpeakerNode(speakerToken.Literal, attributes);
+                        var speakerNode = new SpeakerNode(_nextNodeId++, speakerToken.Literal, attributes);
 
                         _currentSpeakerNode = speakerNode;
 
@@ -533,7 +537,8 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
                             attr.IsAllowed(textToken);
                         }
 
-                        var textNode = new TextNode(_currentSpeakerNode.SpeakerName, textToken.Literal, attributes);
+                        var textNode = new TextNode(_nextNodeId++, _currentSpeakerNode.SpeakerName, textToken.Literal,
+                            attributes);
 
                         statements.Add(textNode);
                         break;
@@ -545,7 +550,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
                             attr.IsAllowed(crossTextToken);
                         }
 
-                        var crossTextNode = new CrossTextNode(_currentSpeakerNode.SpeakerName,
+                        var crossTextNode = new CrossTextNode(_nextNodeId++, _currentSpeakerNode.SpeakerName,
                             crossTextToken.Literal.Replace("\r\n", "\n").Split('\n').ToList(),
                             attributes);
 
@@ -556,7 +561,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
 
                         var gotoBlock = Match(TokenType.CommandIdent);
 
-                        var gotoNode = new GotoCommandNode(attributes);
+                        var gotoNode = new GotoCommandNode(_nextNodeId++, attributes);
 
                         _commandGotoMap.Add(gotoNode,
                             new Tuple<string, Token>(_currentNamespaceNode.Namespace, gotoBlock));
@@ -566,13 +571,13 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
                     case TokenType.Return:
                         Match(TokenType.Return);
 
-                        var returnNode = new RetCommandNode(_currentBlockNode, attributes);
+                        var returnNode = new RetCommandNode(_nextNodeId++, _currentBlockNode, attributes);
 
                         statements.Add(returnNode);
                         break;
                     case TokenType.Null:
                         Match(TokenType.Null);
-                        var nullNode = new NullCommandNode();
+                        var nullNode = new NullCommandNode(_nextNodeId++);
                         statements.Add(nullNode);
                         break;
                     case TokenType.Set:
@@ -583,13 +588,14 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
                         var valueExpr = ParseValueExpression();
                         if (varToken.Literal.StartsWith('%'))
                         {
-                            var setNode = new GlobalSetCommandNode(varToken.Literal[1..], valueExpr, attributes);
+                            var setNode = new GlobalSetCommandNode(_nextNodeId++, varToken.Literal[1..], valueExpr,
+                                attributes);
                             // _globalVars.Add(setNode.TargetVar);
                             statements.Add(setNode);
                         }
                         else
                         {
-                            var setNode = new SetCommandNode(varToken.Literal, valueExpr, attributes);
+                            var setNode = new SetCommandNode(_nextNodeId++, varToken.Literal, valueExpr, attributes);
                             _currentNamespaceNode.ScopeVars.Add(setNode.TargetVar);
                             statements.Add(setNode);
                         }
@@ -648,25 +654,26 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
                     Match(TokenType.Goto);
 
                     var gotoBlock = Match(TokenType.CommandIdent);
-                    var gotoNode = new GotoCommandNode(bodyAttributes);
+                    var gotoNode = new GotoCommandNode(_nextNodeId++, bodyAttributes);
 
                     _commandGotoMap.Add(gotoNode, new Tuple<string, Token>(_currentNamespaceNode.Namespace, gotoBlock));
 
-                    optionOfNode = new OptionOfNode(displayContent.Literal, gotoNode, optionAttributes);
+                    optionOfNode = new OptionOfNode(_nextNodeId++, displayContent.Literal, gotoNode, optionAttributes);
                     break;
                 case TokenType.Return:
                     Match(TokenType.Return);
 
-                    var returnNode = new RetCommandNode(_currentBlockNode, bodyAttributes);
+                    var returnNode = new RetCommandNode(_nextNodeId++, _currentBlockNode, bodyAttributes);
 
-                    optionOfNode = new OptionOfNode(displayContent.Literal, returnNode, optionAttributes);
+                    optionOfNode = new OptionOfNode(_nextNodeId++, displayContent.Literal, returnNode,
+                        optionAttributes);
                     break;
                 case TokenType.Null:
                     Match(TokenType.Null);
 
-                    var nullNode = new NullCommandNode();
+                    var nullNode = new NullCommandNode(_nextNodeId++);
 
-                    optionOfNode = new OptionOfNode(displayContent.Literal, nullNode, optionAttributes);
+                    optionOfNode = new OptionOfNode(_nextNodeId++, displayContent.Literal, nullNode, optionAttributes);
                     break;
                 case TokenType.Set:
                     Match(TokenType.Set);
@@ -676,15 +683,18 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
                     var valueExpr = ParseValueExpression();
                     if (varToken.Literal.StartsWith('%'))
                     {
-                        var setNode = new GlobalSetCommandNode(varToken.Literal[1..], valueExpr, bodyAttributes);
+                        var setNode = new GlobalSetCommandNode(_nextNodeId++, varToken.Literal[1..], valueExpr,
+                            bodyAttributes);
                         // _globalVars.Add(setNode.TargetVar);
-                        optionOfNode = new OptionOfNode(displayContent.Literal, setNode, optionAttributes);
+                        optionOfNode = new OptionOfNode(_nextNodeId++, displayContent.Literal, setNode,
+                            optionAttributes);
                     }
                     else
                     {
-                        var setNode = new SetCommandNode(varToken.Literal, valueExpr, bodyAttributes);
+                        var setNode = new SetCommandNode(_nextNodeId++, varToken.Literal, valueExpr, bodyAttributes);
                         _currentNamespaceNode.ScopeVars.Add(setNode.TargetVar);
-                        optionOfNode = new OptionOfNode(displayContent.Literal, setNode, optionAttributes);
+                        optionOfNode = new OptionOfNode(_nextNodeId++, displayContent.Literal, setNode,
+                            optionAttributes);
                     }
 
                     break;
@@ -694,7 +704,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
 
             if (_currentOptions == null)
             {
-                _currentOptions = new OptionsNode();
+                _currentOptions = new OptionsNode(_nextNodeId++);
             }
 
             _currentOptions.Options.Add(optionOfNode);
@@ -753,27 +763,27 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
                 case TokenType.CommandInt:
                 {
                     var token = Match(TokenType.CommandInt);
-                    return new IntValueNode(int.Parse(token.Literal));
+                    return new IntValueNode(_nextNodeId++, int.Parse(token.Literal));
                 }
                 case TokenType.CommandFloat:
                 {
                     var token = Match(TokenType.CommandFloat);
-                    return new FloatValueNode(float.Parse(token.Literal));
+                    return new FloatValueNode(_nextNodeId++, float.Parse(token.Literal));
                 }
                 case TokenType.CommandTrue:
                 {
-                    var token = Match(TokenType.CommandTrue);
-                    return new TrueValueNode();
+                    Match(TokenType.CommandTrue);
+                    return new TrueValueNode(_nextNodeId++);
                 }
                 case TokenType.CommandFalse:
                 {
-                    var token = Match(TokenType.CommandFalse);
-                    return new FalseValueNode();
+                    Match(TokenType.CommandFalse);
+                    return new FalseValueNode(_nextNodeId++);
                 }
                 case TokenType.CommandIdent:
                 {
                     var token = Match(TokenType.CommandIdent);
-                    return new VarRefNode(token.Literal);
+                    return new VarRefNode(_nextNodeId++, token.Literal);
                 }
                 default:
                     throw new NoExpressionException(_currentToken);
