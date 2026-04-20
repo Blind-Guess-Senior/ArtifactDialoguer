@@ -17,7 +17,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Tests.Editor
         {
             string samplePath =
                 Path.GetFullPath(
-                    "Packages/com.blind-guess-senior.artifactdialoguer/Samples~/DialogueSample/dialoguesample.artidial.sample");
+                    "Packages/com.blind-guess-senior.artifactdialoguer/Tests/Editor/DialogueSample/dialoguesample.artidial.sample");
             Assert.IsTrue(File.Exists(samplePath), $"找不到测试文件: {samplePath}");
 
             string source = File.ReadAllText(samplePath);
