@@ -22,6 +22,10 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
         public void Init();
         public IDialogueRuntimeResult Next();
         public IDialogueRuntimeResult OptionChosen(int index);
+
+        public DialogueState ExportSave(bool blockLevelOnly = false);
+
+        public void LoadSave(DialogueState state);
     }
 
     /// <summary>
@@ -36,20 +40,10 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
         /// </summary>
         private readonly DialogueState _dialogueState = new()
         {
-            OnceStatement = new Dictionary<Node, bool>(),
+            OnceStatement = new HashSet<int>(),
             Variables = new Dictionary<string, ExpressionEvaluateResult>(),
             CallStack = new Stack<CallStackEntry>(),
         };
-
-        /// <summary>
-        /// Whether there is in cross text's context.
-        /// </summary>
-        private bool _isCrossTextContext;
-
-        /// <summary>
-        /// Whether there is in condition of waiting for option choose.
-        /// </summary>
-        private bool _isOptionContext;
 
         private List<DialogueRuntimeResultOption> _currentOptionList = new();
 
@@ -69,6 +63,8 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
 
         #endregion
 
+        #region Runtime Methods
+
         /// <summary>
         /// Init dialogue runner.
         /// </summary>
@@ -79,8 +75,8 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
                 ArtifactDialoguerDebug.PackageLog("Dialogue file not found!", DebugLogLevel.Fatal);
             }
 
-            _isCrossTextContext = false;
-            _isOptionContext = false;
+            _dialogueState.IsCrossTextContext = false;
+            _dialogueState.IsOptionContext = false;
 
             if (string.IsNullOrEmpty(startBlock))
             {
@@ -88,7 +84,6 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
             }
 
             var block = dialogueStorageObject.Blocks.Find(b => b.BlockName == startBlock);
-
 
             if (block != null)
             {
@@ -110,7 +105,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
         {
             while (true)
             {
-                if (_isOptionContext)
+                if (_dialogueState.IsOptionContext)
                 {
                     return new DialogueRuntimeResultNextDenied();
                 }
@@ -121,10 +116,11 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
                     return new DialogueRuntimeResultError();
                 }
 
-                if (_dialogueState.CurrentBlockStatementIndex >= _dialogueState.CurrentBlock.Statements.Count)
+                if (_dialogueState.CurrentBlockStatementIndex >= _dialogueState.CurrentBlock.Statements.Count &&
+                    !_dialogueState.IsCrossTextContext)
                 {
-                    _isOptionContext = false;
-                    _isCrossTextContext = false;
+                    _dialogueState.IsCrossTextContext = false;
+                    _dialogueState.IsOptionContext = false;
                     _dialogueState.CurrentCrossTextStatementIndex = 0;
 
                     if (_dialogueState.CurrentBlock.NaturalNext != null)
@@ -154,7 +150,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
 
                     if (_dialogueState.CurrentBlock.Attributes?.Any(attr => attr is OnceAttribute) ?? false)
                     {
-                        if (!_dialogueState.OnceStatement.TryAdd(_dialogueState.CurrentBlock, true))
+                        if (!_dialogueState.OnceStatement.Add(_dialogueState.CurrentBlock.NodeId))
                         {
                             _dialogueState.CurrentBlock = _dialogueState.CurrentBlock.NaturalNext;
                             _dialogueState.CurrentBlockStatementIndex = 0;
@@ -163,12 +159,14 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
                     }
                 }
 
-                var statement = _dialogueState.CurrentBlock.Statements[_dialogueState.CurrentBlockStatementIndex];
-                if (_isCrossTextContext)
+                StatementNode statement;
+                if (_dialogueState.IsCrossTextContext)
                 {
                     statement = _dialogueState.CurrentBlock.Statements[_dialogueState.CurrentCrossTextStatementIndex];
                     goto StatementActions;
                 }
+
+                statement = _dialogueState.CurrentBlock.Statements[_dialogueState.CurrentBlockStatementIndex];
 
                 _dialogueState.CurrentBlockStatementIndex++;
 
@@ -181,7 +179,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
 
                 if (statement.Attributes?.Any(attr => attr is OnceAttribute) ?? false)
                 {
-                    if (!_dialogueState.OnceStatement.TryAdd(statement, true)) // Found got once
+                    if (!_dialogueState.OnceStatement.Add(statement.NodeId)) // Found got once
                     {
                         switch (statement)
                         {
@@ -220,9 +218,9 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
                         return new DialogueRuntimeResultTextGot(textNode.Speaker, textNode.Content);
                     case CrossTextNode crossTextNode:
                         // TODO: may need better way to pass cross text
-                        if (!_isCrossTextContext)
+                        if (!_dialogueState.IsCrossTextContext)
                         {
-                            _isCrossTextContext = true;
+                            _dialogueState.IsCrossTextContext = true;
                             _dialogueState.CurrentCrossTextIndex = 0;
                             _dialogueState.CurrentCrossTextStatementIndex =
                                 _dialogueState.CurrentBlockStatementIndex - 1;
@@ -230,7 +228,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
 
                         if (_dialogueState.CurrentCrossTextIndex >= crossTextNode.Contents.Count)
                         {
-                            _isCrossTextContext = false;
+                            _dialogueState.IsCrossTextContext = false;
                             goto Continue;
                         }
 
@@ -288,7 +286,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
 
                             if (attr.Any(att => att is OnceAttribute))
                             {
-                                if (_dialogueState.OnceStatement.ContainsKey(option))
+                                if (_dialogueState.OnceStatement.Contains(option.NodeId))
                                 {
                                     continue;
                                 }
@@ -302,7 +300,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
                                 option.Command, option));
                         }
 
-                        _isOptionContext = true;
+                        _dialogueState.IsOptionContext = true;
                         _currentOptionList = options;
 
                         return new DialogueRuntimeResultOptionsGot(options);
@@ -327,12 +325,12 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
                 throw new OptionOutOfRangeException(index, _currentOptionList.Count);
             }
 
-            _isOptionContext = false;
+            _dialogueState.IsOptionContext = false;
             var chosenOption = _currentOptionList[index];
 
             if (chosenOption.Once)
             {
-                _dialogueState.OnceStatement.Add(chosenOption.Node, true);
+                _dialogueState.OnceStatement.Add(chosenOption.Node.NodeId);
             }
 
             var command = chosenOption.Command;
@@ -384,6 +382,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
         /// <returns>The result after dialogue move forward.</returns>
         public IDialogueRuntimeResult OptionChosen(DialogueRuntimeResultOption option)
             => OptionChosen(option.Index);
+
 
         /// <summary>
         /// Check whether given if conditions are all met.
@@ -480,6 +479,54 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
                     return new ExpressionEvaluateResult(null, null);
             }
         }
+
+        #endregion
+
+        #region Save Methods
+
+        /// <summary>
+        /// Export dialogue state of this runner.
+        /// </summary>
+        /// <param name="blockLevelOnly">If true, this save will restart from the beginning of current block when loaded.</param>
+        /// <returns>The dialogue state of this runner.</returns>
+        public DialogueState ExportSave(bool blockLevelOnly = false)
+        {
+            if (_dialogueState == null)
+            {
+                ArtifactDialoguerDebug.RuntimeLog($"Dialogue state of {gameObject.name} is unexisted.",
+                    DebugLogLevel.Error);
+                return null;
+            }
+
+            if (!_dialogueState.Save(blockLevelOnly))
+            {
+                ArtifactDialoguerDebug.RuntimeLog($"{gameObject.name} saving failed. Logged above.",
+                    DebugLogLevel.Error);
+            }
+
+            return _dialogueState;
+        }
+
+        /// <summary>
+        /// Load dialogue state from saved state instance.
+        /// </summary>
+        /// <param name="state">The dialogue state to load.</param>
+        public void LoadSave(DialogueState state)
+        {
+            if (state == null)
+            {
+                ArtifactDialoguerDebug.RuntimeLog($"Given save state for {gameObject.name} is unexisted.",
+                    DebugLogLevel.Error);
+            }
+
+            if (!_dialogueState.Load(state, dialogueStorageObject))
+            {
+                ArtifactDialoguerDebug.RuntimeLog(
+                    $"{gameObject.name} loading failed. Could not load save. Logged above.", DebugLogLevel.Error);
+            }
+        }
+
+        #endregion
 
         #endregion
     }
