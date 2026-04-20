@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using BlindGuessSenior.ArtifactDialoguer.Utilities.DebugUtils;
 
 // ReSharper disable CheckNamespace
 
@@ -880,6 +881,15 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
             }
 
             tokens.Add(tok);
+
+            foreach (var token in tokens)
+            {
+                if (token.Type == TokenType.Illegal)
+                {
+                    ArtifactDialoguerDebug.CompileLog(
+                        $"Bad token at Line {token.Line}, Column {token.Column}: {token.Literal}");
+                }
+            }
 
             return tokens;
         }
