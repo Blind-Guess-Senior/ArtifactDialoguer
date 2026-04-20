@@ -51,5 +51,33 @@ namespace Editor.Compiler
 
             ArtifactDialoguerDebug.PackageLog($"Compile {assets.Count} files.", DebugLogLevel.WorksWell);
         }
+
+        [MenuItem("Artifact Dialoguer/Clean")]
+        public static void Clean()
+        {
+            const string folderPath = "Assets/Resources/ArtiDialogue";
+            
+            if (!AssetDatabase.IsValidFolder(folderPath))
+            {
+                ArtifactDialoguerDebug.PackageLog("No compiled dialogues found (folder does not exist).", DebugLogLevel.WorksWell);
+                return;
+            }
+
+            // Only find DialogueStorageObject assets within the specific compilation folder
+            var guids = AssetDatabase.FindAssets("t:DialogueStorageObject", new[] { folderPath });
+            int cleanedCount = 0;
+            
+            foreach (var guid in guids)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                if (AssetDatabase.DeleteAsset(path))
+                {
+                    cleanedCount++;
+                }
+            }
+
+            AssetDatabase.Refresh();
+            ArtifactDialoguerDebug.PackageLog($"Cleaned {cleanedCount} compiled dialogue files.", DebugLogLevel.WorksWell);
+        }
     }
 }
