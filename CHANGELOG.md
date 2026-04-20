@@ -11,13 +11,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - 
 
+### Fixed
+
+- 
+
 ### Changed
 
 - 
 
 ### Removed
 
-- 
+-
+
+## [0.2.0] - 2026-04-20
+
+### Added
+
+- Add save support.
+- Add cross text support for option's display content.
+- Now lexer will output all illegal tokens.
+
+### Fixed
+
+- Add extension for sample dialogue file so that it won't be compiled by "Compile All".
+- Fix \[empty\] lexing in option context.
+- Fix cross text at the end of the block gets swallowed.
+
+### Changed
+
+- Now all nodes got an id.
+- Runtime once statements record now use node id rather than node reference itself.
+- Runtime flag previous in runner now moved to state.
 
 ## [0.1.3] - 2026-04-18
 
