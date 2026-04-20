@@ -390,5 +390,4 @@ Namespace
 - var use before definition check
 - extcall support
 - unchosen option support (by command like \[empty\])
-- english readme.md
 -

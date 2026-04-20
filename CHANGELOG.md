@@ -23,6 +23,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -
 
+## [0.2.1] - 2026-04-20
+
+### Added
+
+- Editor tools to clean all compiled dialogues.
+
+### Fixed
+
+- Move sample dialogue file into Tests folder.
+
 ## [0.2.0] - 2026-04-20
 
 ### Added
