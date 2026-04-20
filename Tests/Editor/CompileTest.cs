@@ -15,17 +15,19 @@ namespace BlindGuessSenior.ArtifactDialoguer.Tests.Editor
         [Test]
         public void CompileSampleFile()
         {
-            string samplePath = Path.GetFullPath("Packages/com.blind-guess-senior.artifactdialoguer/Samples~/DialogueSample/dialoguesample.artidial");
+            string samplePath =
+                Path.GetFullPath(
+                    "Packages/com.blind-guess-senior.artifactdialoguer/Samples~/DialogueSample/dialoguesample.artidial.sample");
             Assert.IsTrue(File.Exists(samplePath), $"找不到测试文件: {samplePath}");
 
             string source = File.ReadAllText(samplePath);
             var tokens = Lexer.Tokenize(source);
-            
+
             Assert.IsNotNull(tokens);
-            
+
             var tokensList = new System.Collections.Generic.List<System.Collections.Generic.List<Token>> { tokens };
             var dialogues = Parser.Parse(tokensList);
-            
+
             Assert.IsNotNull(dialogues);
 
             if (!AssetDatabase.IsValidFolder("Assets/Resources"))
