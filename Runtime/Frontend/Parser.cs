@@ -634,7 +634,12 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
             }
 
             Match(TokenType.Question);
-            var displayContent = Match(TokenType.Text);
+            var displayContent = Advance();
+            if (displayContent.Type != TokenType.Text && displayContent.Type != TokenType.CrossText)
+            {
+                throw new MismatchSyntaxException(TokenType.Text, _currentToken);
+            }
+
             Match(TokenType.Arrow);
 
             OptionOfNode optionOfNode;
