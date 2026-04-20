@@ -1,8 +1,7 @@
-﻿// ReSharper disable CheckNamespace
-
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Text.RegularExpressions;
+
+// ReSharper disable CheckNamespace
 
 namespace BlindGuessSenior.ArtifactDialoguer.Frontend
 {
@@ -131,7 +130,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         private bool _isCommandContext;
 
         /// <summary>
-        /// Whether it is in a expression context in a command. (around by "()")
+        /// Whether it is in an expression context in a command. (around by "()")
         /// </summary>
         private bool _isCommandExprContext;
 
@@ -618,7 +617,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         {
             int position = _position;
 
-            while (IsOptionContextChar(_ch))
+            while (IsOptionContextChar(_ch, _isCommandContext))
             {
                 ReadChar();
             }
@@ -782,11 +781,21 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         /// </summary>
         /// <param name="ch">The char to check.</param>
         /// <returns>True if given char is text; otherwise, false.</returns>
-        private static bool IsOptionContextChar(char ch)
+        private static bool IsOptionContextChar(char ch, bool isCommandContext)
         {
             if (ch == '\n' || ch == '\r' || ch == '\0')
             {
                 return false;
+            }
+
+            if (isCommandContext)
+            {
+                switch (ch)
+                {
+                    case '[':
+                    case ']':
+                        return false;
+                }
             }
 
             return ch switch
