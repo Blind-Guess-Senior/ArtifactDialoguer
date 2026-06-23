@@ -233,6 +233,10 @@ Detailed syntax rules for dialogue files:
   Anything else?
   [if hasSword == true] ? I got the Holy Sword -> [goto ifcondDialogue1]
   ? Not really -> [null]
+
+  @VillagerA
+  Farewell then.
+  This text will appear after choosing "Not really".
   ```
 
   Branching options containing multiple sub-nodes. Upon selection, the corresponding Command is executed.
@@ -300,6 +304,12 @@ Detailed syntax rules for dialogue files:
     - `unreach`: Used only for Blocks. Isolates this Block from Natural Flow, making it accessible only via the `goto`
       command. Highly recommended for blocks serving strictly as branching responses.
 
+      ```text
+      [unreach] ifCondDialogue1:
+      @ VillagerB
+      What! You actually got the Holy Sword?!
+      ```
+
   Attribute parsing order does not matter, but `if` attributes are always evaluated first. If an `if` condition fails,
   `once` triggers won't be consumed.
   `cycle` and `unreach` are mutually exclusive.
@@ -334,6 +344,8 @@ Key APIs:
 Typically, a custom UI Manager script will maintain a reference to `DialogueRunner`, calling these methods and utilizing
 `switch/case` logic with the result variables to draw UI buttons, texts, and execute overarching save/load behaviors.
 
+*Save is currently an experimental feature. The user experience is suboptimal.*
+
 ## 5. DialogueRuntimeResult
 
 Contains context-specific data acquired during the dialogue progression.
@@ -349,8 +361,20 @@ You can query the exact result type with the `public Type ResultType` property.
   ```
 
   `Speaker` is the character talking. `Content` is the spoken text.
-  CrossText will broadcast `DialogueRuntimeResultTextGot` multiple times sequentially, with one extra line of `Content`
-  per step.
+
+- **`DialogueRuntimeResultTextAppend`**:
+
+  Received CrossText content.
+
+  ```text
+    public string Speaker;
+    public string AppendContent;
+    public string CurrentFullContent;
+  ```
+
+  CrossText returns `DialogueRuntimeResultTextAppend` on each step after the first. `Speaker` indicates the current
+  speaker; `AppendContent` is the newly appended text for this step (without line breaks); `CurrentFullContent` is the
+  accumulated full text, which expands by one line each step.
 
 - **`DialogueRuntimeResultOptionsGot`**:
 
@@ -394,10 +418,11 @@ You can query the exact result type with the `public Type ResultType` property.
 
 ### TODOs:
 
+- FIX: variable
+- save support
 - Complex arithmetic expression
 - Re-add compile flagged feature support
 - Var use before definition check
 - Extcall support
 - Unchosen option support (by command like \[empty\])
-- English readme.md (completed)
 

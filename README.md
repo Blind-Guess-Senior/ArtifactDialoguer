@@ -321,6 +321,8 @@ Namespace
 
 随后，一般地，需要一个脚本持有 `DialogueRunner` 的引用，并在恰当的时机调用上述提供的方法，根据方法的返回值填充UI内容、处理存档行为等。
 
+*存档目前为实验性功能。使用体验不佳。*
+
 ## 5. DialogueRuntimeResult
 
 对话步进过程中的语句信息。
@@ -340,7 +342,18 @@ Namespace
 
   `Speaker` 指示当前文本的 Speaker; `Content` 为当前文本。
 
-  特别地，跨行文本将多次返回 `DialogueRuntimeResultTextGot`，每次的 `Content` 将扩展一行。
+- **`DialogueRuntimeResultTextAppend`**
+
+  读取到跨行文本内容。
+
+  ```text
+    public string Speaker;
+    public string AppendContent;
+    public string CurrentFullContent;
+  ```
+
+  跨行文本将多次返回 `DialogueRuntimeResultTextGot`。`Speaker` 指示当前文本的 Speaker; `AppendContent`
+  为本次返回新增的文本(不含换行符)； `CurrentFullContent` 为当前总文本，每次的 `CurrentFullContent` 将扩展一行。
 
 - **`DialogueRuntimeResultOptionsGot`**:
 
@@ -379,12 +392,16 @@ Namespace
 
   对话进行异常。当前 Block 不存在时出现。
 
-- **`DialogueRuntimeResultNextDenied`**: 正在等待分支选项选择，`Next()` 被禁用。
+- **`DialogueRuntimeResultNextDenied`**:
+
+  正在等待分支选项选择，`Next()` 被禁用。
 
 ---
 
 ### TODOs:
 
+- FIX: variable
+- save support
 - complex arithmetic expression
 - re-add compile flagged feature support
 - var use before definition check

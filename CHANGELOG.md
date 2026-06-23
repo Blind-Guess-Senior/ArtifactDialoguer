@@ -9,19 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- 
+-
 
 ### Fixed
 
-- 
+-
 
 ### Changed
 
-- 
+- Default save behaviour switched to block level only. Save support is experimental.
+- Better cross text result sending way.
 
 ### Removed
 
 -
+
+## [0.3.0] - 2026-6-23
+
+### Changed
+
+- Default save behaviour switched to block level only. Save support is experimental.
+- Better cross text result sending way.
 
 ## [0.2.1] - 2026-04-20
 
