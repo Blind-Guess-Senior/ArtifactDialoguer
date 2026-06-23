@@ -25,6 +25,22 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
         }
     }
 
+    public struct DialogueRuntimeResultTextAppend : IDialogueRuntimeResult
+    {
+        public Type ResultType => GetType();
+
+        public string Speaker;
+        public string AppendContent;
+        public string CurrentFullContent;
+
+        public DialogueRuntimeResultTextAppend(string speaker, string appendContent, string currentFullContent)
+        {
+            Speaker = speaker;
+            AppendContent = appendContent;
+            CurrentFullContent = currentFullContent;
+        }
+    }
+
     public struct DialogueRuntimeResultOptionsGot : IDialogueRuntimeResult
     {
         public Type ResultType => GetType();

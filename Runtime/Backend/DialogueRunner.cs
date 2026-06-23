@@ -24,7 +24,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
         public IDialogueRuntimeResult OptionChosen(int index);
         public IDialogueRuntimeResult OptionChosen(DialogueRuntimeResultOption option);
 
-        public DialogueState ExportSave(bool blockLevelOnly = false);
+        public DialogueState ExportSave(bool blockLevelOnly = true);
 
         public void LoadSave(DialogueState state);
     }
@@ -218,7 +218,6 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
                     case TextNode textNode:
                         return new DialogueRuntimeResultTextGot(textNode.Speaker, textNode.Content);
                     case CrossTextNode crossTextNode:
-                        // TODO: may need better way to pass cross text
                         if (!_dialogueState.IsCrossTextContext)
                         {
                             _dialogueState.IsCrossTextContext = true;
@@ -233,10 +232,11 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
                             goto Continue;
                         }
 
+                        var append = crossTextNode.Contents[_dialogueState.CurrentCrossTextIndex];
                         var content = string.Join('\n',
                             crossTextNode.Contents.Take(_dialogueState.CurrentCrossTextIndex + 1));
                         _dialogueState.CurrentCrossTextIndex++;
-                        return new DialogueRuntimeResultTextGot(crossTextNode.Speaker, content);
+                        return new DialogueRuntimeResultTextAppend(crossTextNode.Speaker, append, content);
                     case GotoCommandNode gotoCommandNode:
                         _dialogueState.CallStackPush();
 
@@ -490,7 +490,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
         /// </summary>
         /// <param name="blockLevelOnly">If true, this save will restart from the beginning of current block when loaded.</param>
         /// <returns>The dialogue state of this runner.</returns>
-        public DialogueState ExportSave(bool blockLevelOnly = false)
+        public DialogueState ExportSave(bool blockLevelOnly = true)
         {
             if (_dialogueState == null)
             {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Xml.Serialization;
 using BlindGuessSenior.ArtifactDialoguer.Frontend;
 using BlindGuessSenior.ArtifactDialoguer.Utilities.DebugUtils;
-using Unity.Plastic.Newtonsoft.Json;
+using Newtonsoft.Json;
 using Unity.VisualScripting.YamlDotNet.Serialization;
 
 // ReSharper disable CheckNamespace
