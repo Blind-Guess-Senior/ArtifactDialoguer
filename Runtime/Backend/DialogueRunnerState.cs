@@ -12,7 +12,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
     using CallStackEntry = Tuple<BlockNode, int>;
 
     [Serializable]
-    public class DialogueState
+    public class DialogueRunnerState
     {
         #region Definitions
 
@@ -82,16 +82,12 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
         public bool IsOptionContext;
 
         /// <summary>
-        /// Saved statements that has been 'once'. Distinguish by node's id.
+        /// Saved statements that has been 'ponce', which is once in every runner.
+        /// <br/>
+        /// Distinguish by node's id.
         /// </summary>
         [NonSerialized] [JsonIgnore] [XmlIgnore] [YamlIgnore]
-        public HashSet<int> OnceStatement;
-
-        /// <summary>
-        /// Saved variables.
-        /// </summary>
-        [NonSerialized] [JsonIgnore] [XmlIgnore] [YamlIgnore]
-        public Dictionary<string, ExpressionEvaluateResult> Variables;
+        public HashSet<int> POnceStatement;
 
         /// <summary>
         /// Call stack to support goto and ret.
@@ -126,7 +122,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
         public string CurrentBlockName;
 
         /// <summary>
-        /// Serialize version for <see cref="OnceStatement"/>.
+        /// Serialize version for <see cref="POnceStatement"/>.
         /// </summary>
         public List<int> SerializedOnceStatements = new();
 
@@ -154,6 +150,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
         /// </summary>
         /// <param name="blockLevelOnly">True to save exactly at the beginning of the block, otherwise false.</param>
         /// <returns>True if save successfully; otherwise, false.</returns>
+        [Obsolete("Current Save Implementation is Bad. Do not Use It.")]
         public bool Save(bool blockLevelOnly = false)
         {
             SavedAtBlockLevel = blockLevelOnly;
@@ -169,26 +166,26 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
 
             // Save once statements
             SerializedOnceStatements.Clear();
-            foreach (var statement in OnceStatement)
+            foreach (var statement in POnceStatement)
             {
                 SerializedOnceStatements.Add(statement);
             }
 
             // Save variables
-            SerializedVariables.Clear();
-            foreach (var variable in Variables)
-            {
-                DialogueVarType saveType = DialogueVarType.Int;
-                if (variable.Value.Item1 == typeof(float)) saveType = DialogueVarType.Float;
-                else if (variable.Value.Item1 == typeof(bool)) saveType = DialogueVarType.Bool;
-
-                SerializedVariables.Add(new SerializableVariableEntry
-                {
-                    VarName = variable.Key,
-                    ValueType = saveType,
-                    Value = variable.Value.Item2.ToString()
-                });
-            }
+            // SerializedVariables.Clear();
+            // foreach (var variable in Variables)
+            // {
+            //     DialogueVarType saveType = DialogueVarType.Int;
+            //     if (variable.Value.Item1 == typeof(float)) saveType = DialogueVarType.Float;
+            //     else if (variable.Value.Item1 == typeof(bool)) saveType = DialogueVarType.Bool;
+            //
+            //     SerializedVariables.Add(new SerializableVariableEntry
+            //     {
+            //         VarName = variable.Key,
+            //         ValueType = saveType,
+            //         Value = variable.Value.Item2.ToString()
+            //     });
+            // }
 
             // Save call stack
             SerializedCallStack.Clear();
@@ -211,10 +208,11 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
         /// Try load state from given saved state.
         /// </summary>
         /// <returns>True if load successfully; otherwise, false.</returns>
-        public bool Load(DialogueState state, DialogueStorageObject dialogueStorageObject)
+        [Obsolete("Current Save Implementation is Bad. Do not Use It.")]
+        public bool Load(DialogueRunnerState runnerState, DialogueStorageObject dialogueStorageObject)
         {
             // Load serializable
-            if (state.SavedAtBlockLevel)
+            if (runnerState.SavedAtBlockLevel)
             {
                 CurrentBlockStatementIndex = 0;
                 CurrentCrossTextIndex = 0;
@@ -224,21 +222,21 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
             }
             else
             {
-                CurrentBlockStatementIndex = state.CurrentBlockStatementIndex;
-                CurrentCrossTextIndex = state.CurrentCrossTextIndex;
-                CurrentCrossTextStatementIndex = state.CurrentCrossTextStatementIndex;
-                IsCrossTextContext = state.IsCrossTextContext;
-                IsOptionContext = state.IsOptionContext;
+                CurrentBlockStatementIndex = runnerState.CurrentBlockStatementIndex;
+                CurrentCrossTextIndex = runnerState.CurrentCrossTextIndex;
+                CurrentCrossTextStatementIndex = runnerState.CurrentCrossTextStatementIndex;
+                IsCrossTextContext = runnerState.IsCrossTextContext;
+                IsOptionContext = runnerState.IsOptionContext;
             }
 
             // Load block
-            if (string.IsNullOrEmpty(state.CurrentBlockName))
+            if (string.IsNullOrEmpty(runnerState.CurrentBlockName))
             {
                 ArtifactDialoguerDebug.RuntimeLog("Load failed. Current block unexisted.");
                 return false;
             }
 
-            CurrentBlock = dialogueStorageObject.Blocks.Find(b => b.BlockName == state.CurrentBlockName);
+            CurrentBlock = dialogueStorageObject.Blocks.Find(b => b.BlockName == runnerState.CurrentBlockName);
             if (CurrentBlock == null)
             {
                 ArtifactDialoguerDebug.RuntimeLog("Load failed. Saved block not found.");
@@ -246,41 +244,41 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
             }
 
             // Load once statements
-            OnceStatement.Clear();
-            foreach (var statement in state.SerializedOnceStatements)
+            POnceStatement.Clear();
+            foreach (var statement in runnerState.SerializedOnceStatements)
             {
-                OnceStatement.Add(statement);
+                POnceStatement.Add(statement);
             }
 
             // Load variables
-            Variables.Clear();
-            foreach (var variable in state.SerializedVariables)
-            {
-                Type runtimeType = typeof(int);
-                object runtimeValue = 0;
-
-                switch (variable.ValueType)
-                {
-                    case DialogueVarType.Int:
-                        runtimeType = typeof(int);
-                        runtimeValue = int.Parse(variable.Value);
-                        break;
-                    case DialogueVarType.Float:
-                        runtimeType = typeof(float);
-                        runtimeValue = float.Parse(variable.Value);
-                        break;
-                    case DialogueVarType.Bool:
-                        runtimeType = typeof(bool);
-                        runtimeValue = bool.Parse(variable.Value);
-                        break;
-                }
-
-                Variables.Add(variable.VarName, new ExpressionEvaluateResult(runtimeType, runtimeValue));
-            }
+            // Variables.Clear();
+            // foreach (var variable in runnerState.SerializedVariables)
+            // {
+            //     Type runtimeType = typeof(int);
+            //     object runtimeValue = 0;
+            //
+            //     switch (variable.ValueType)
+            //     {
+            //         case DialogueVarType.Int:
+            //             runtimeType = typeof(int);
+            //             runtimeValue = int.Parse(variable.Value);
+            //             break;
+            //         case DialogueVarType.Float:
+            //             runtimeType = typeof(float);
+            //             runtimeValue = float.Parse(variable.Value);
+            //             break;
+            //         case DialogueVarType.Bool:
+            //             runtimeType = typeof(bool);
+            //             runtimeValue = bool.Parse(variable.Value);
+            //             break;
+            //     }
+            //
+            //     Variables.Add(variable.VarName, new ExpressionEvaluateResult(runtimeType, runtimeValue));
+            // }
 
             // Load call stack
             CallStack.Clear();
-            foreach (var serializedEntry in state.SerializedCallStack)
+            foreach (var serializedEntry in runnerState.SerializedCallStack)
             {
                 var block = dialogueStorageObject.Blocks.Find(b => b.BlockName == serializedEntry.BlockName);
                 if (block == null)
@@ -296,6 +294,78 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
 
             return true;
         }
+
+        #endregion
+    }
+
+    public static class DialogueState
+    {
+        #region Definitions
+
+        public class PerNamespaceState
+        {
+            #region Fields
+
+            /// <summary>
+            /// Saved statements that has been 'once'. Distinguish by node's id.
+            /// </summary>
+            [NonSerialized] [JsonIgnore] [XmlIgnore] [YamlIgnore]
+            private readonly HashSet<int> OnceStatement = new();
+
+            /// <summary>
+            /// Saved variables.
+            /// </summary>
+            [NonSerialized] [JsonIgnore] [XmlIgnore] [YamlIgnore]
+            private readonly Dictionary<string, ExpressionEvaluateResult> Variables = new();
+
+            #endregion
+
+            #region OnceStatement Methods
+
+            public bool HadOnced(int nodeId)
+                => OnceStatement.Contains(nodeId);
+
+            #endregion
+
+            #region Variables Methods
+
+            public bool TryGetVariable(string variable, out ExpressionEvaluateResult result)
+                => Variables.TryGetValue(variable, out result);
+
+            public void SetVariable(string variable, ExpressionEvaluateResult result)
+                => Variables[variable] = result;
+
+            #endregion
+        }
+
+        #endregion
+
+        #region Properties
+
+        /// <summary>
+        /// Stores states that should be shared through runners in same namespace.
+        /// <br/>
+        /// Distinguish by namespace.
+        /// </summary>
+        public static Dictionary<string, PerNamespaceState> PerNamespaceStates { get; } = new();
+
+        #endregion
+
+        #region Methods
+
+        #region Save Methods
+
+        public static void Save()
+        {
+            throw new NotImplementedException();
+        }
+
+        public static void Load()
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
 
         #endregion
     }
