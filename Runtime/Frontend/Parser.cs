@@ -5,8 +5,6 @@ using BlindGuessSenior.ArtifactDialoguer.Utilities.DebugUtils;
 using BlindGuessSenior.ArtifactDialoguer.Utilities.Exceptions;
 using NUnit.Framework;
 
-// ReSharper disable CheckNamespace
-
 namespace BlindGuessSenior.ArtifactDialoguer.Frontend
 {
     // TODO: Var usage check -> cfg LiveOut

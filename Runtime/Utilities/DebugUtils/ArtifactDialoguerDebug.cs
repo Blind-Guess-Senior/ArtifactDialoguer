@@ -2,8 +2,6 @@ using System;
 using System.Diagnostics;
 using Debug = UnityEngine.Debug;
 
-// ReSharper disable CheckNamespace
-
 namespace BlindGuessSenior.ArtifactDialoguer.Utilities.DebugUtils
 {
     /// <summary>

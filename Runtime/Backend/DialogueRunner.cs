@@ -6,8 +6,6 @@ using BlindGuessSenior.ArtifactDialoguer.Utilities.DebugUtils;
 using BlindGuessSenior.ArtifactDialoguer.Utilities.Exceptions;
 using UnityEngine;
 
-// ReSharper disable CheckNamespace
-
 namespace BlindGuessSenior.ArtifactDialoguer.Backend
 {
     using ExpressionEvaluateResult = Tuple<Type, object>;

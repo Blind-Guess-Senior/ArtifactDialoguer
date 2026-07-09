@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using BlindGuessSenior.ArtifactDialoguer.Frontend;
 
-// ReSharper disable CheckNamespace
-
 namespace BlindGuessSenior.ArtifactDialoguer.Backend
 {
     public interface IDialogueRuntimeResult

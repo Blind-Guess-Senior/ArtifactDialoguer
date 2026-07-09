@@ -2,8 +2,6 @@
 using System.Text.RegularExpressions;
 using BlindGuessSenior.ArtifactDialoguer.Utilities.DebugUtils;
 
-// ReSharper disable CheckNamespace
-
 namespace BlindGuessSenior.ArtifactDialoguer.Frontend
 {
     public enum TokenType

@@ -17,12 +17,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Default save behaviour switched to block level only. Save support is experimental.
-- Better cross text result sending way.
+- 
 
 ### Removed
 
 -
+
+## [0.3.1] - 2026-07-09
+
+### Changed
+
+- Change namespace to `BlindGuessSenior.ArtifactDialoguer`. Package info and asmdef changed as this.
 
 ## [0.3.0] - 2026-6-23
 

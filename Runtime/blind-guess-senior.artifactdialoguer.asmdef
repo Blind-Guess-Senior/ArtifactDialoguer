@@ -1,3 +1,4 @@
 {
-	"name": "blind-guess-senior.artifactdialoguer"
+	"name": "blind-guess-senior.artifactdialoguer",
+	"rootNamespace": "BlindGuessSenior.ArtifactDialoguer"
 }

@@ -1,8 +1,6 @@
 using System;
 using BlindGuessSenior.ArtifactDialoguer.Frontend;
 
-// ReSharper disable CheckNamespace
-
 namespace BlindGuessSenior.ArtifactDialoguer.Utilities.Exceptions
 {
     /// <summary>

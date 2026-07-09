@@ -1,4 +1,18 @@
 {
-	"name": "blind-guess-senior.artifactdialoguer.Editor",
-	"references":[ "GUID:4930306c7c88c2f43a6568de529d9fd9" ]
+    "name": "blind-guess-senior.artifactdialoguer.Editor",
+    "rootNamespace": "BlindGuessSenior.ArtifactDialoguer.Editor",
+    "references": [
+        "GUID:4930306c7c88c2f43a6568de529d9fd9"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }

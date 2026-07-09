@@ -1,8 +1,6 @@
 using UnityEditor;
 using UnityEditor.Build;
 
-// ReSharper disable CheckNamespace
-
 namespace BlindGuessSenior.ArtifactDialoguer.Editor.SettingToggler
 {
     /// <summary>

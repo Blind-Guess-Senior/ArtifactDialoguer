@@ -5,8 +5,6 @@ using UnityEditor;
 using UnityEngine;
 using BlindGuessSenior.ArtifactDialoguer.Frontend;
 
-// ReSharper disable CheckNamespace
-
 namespace BlindGuessSenior.ArtifactDialoguer.Tests.Editor
 {
     [Category("Frontend")]

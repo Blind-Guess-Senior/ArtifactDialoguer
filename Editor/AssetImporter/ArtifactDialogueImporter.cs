@@ -2,7 +2,7 @@ using System.IO;
 using UnityEditor.AssetImporters;
 using UnityEngine;
 
-namespace Editor.AssetImporter
+namespace BlindGuessSenior.ArtifactDialoguer.Editor.AssetImporter
 {
     [ScriptedImporter(0, "artidial")]
     public class ArtifactDialogueImporter : ScriptedImporter

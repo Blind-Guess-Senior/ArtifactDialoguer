@@ -1,7 +1,5 @@
 using System;
 
-// ReSharper disable CheckNamespace
-
 namespace BlindGuessSenior.ArtifactDialoguer.Utilities.Exceptions
 {
     /// <summary>

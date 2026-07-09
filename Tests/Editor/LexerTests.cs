@@ -2,8 +2,6 @@ using System.IO;
 using NUnit.Framework;
 using BlindGuessSenior.ArtifactDialoguer.Frontend;
 
-// ReSharper disable CheckNamespace
-
 namespace BlindGuessSenior.ArtifactDialoguer.Tests.Editor
 {
     [Category("Frontend")]

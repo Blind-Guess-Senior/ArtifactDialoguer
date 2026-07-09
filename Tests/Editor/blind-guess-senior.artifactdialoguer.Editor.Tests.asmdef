@@ -1,6 +1,6 @@
 {
   "name": "blind-guess-senior.artifactdialoguer.Editor.Tests",
-  "rootNamespace": "",
+  "rootNamespace": "BlindGuessSenior.ArtifactDialoguer.Tests.Editor",
   "references": [
     "UnityEditor.TestRunner",
     "blind-guess-senior.artifactdialoguer"

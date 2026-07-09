@@ -1,10 +1,10 @@
 using System.Linq;
-using UnityEditor;
-using UnityEngine;
 using BlindGuessSenior.ArtifactDialoguer.Frontend;
 using BlindGuessSenior.ArtifactDialoguer.Utilities.DebugUtils;
+using UnityEditor;
+using UnityEngine;
 
-namespace Editor.Compiler
+namespace BlindGuessSenior.ArtifactDialoguer.Editor.Compiler
 {
     public static class DialogueCompile
     {

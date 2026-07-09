@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// ReSharper disable CheckNamespace
-
 namespace BlindGuessSenior.ArtifactDialoguer.Frontend
 {
     public class DialogueStorageObject : ScriptableObject
