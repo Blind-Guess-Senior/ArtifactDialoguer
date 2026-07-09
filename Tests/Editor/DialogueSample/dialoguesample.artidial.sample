@@ -20,6 +20,10 @@ secondDialogue:
 [set hasA = 111]
 [set hasB = true]
 
+[ponce] @ villager1
+这一大段是runner级别的
+每个runner只出现一次
+
 @ player
 some text
 [if hasA == 111] ? 选项 1 -> [null]

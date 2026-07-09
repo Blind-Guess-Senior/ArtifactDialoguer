@@ -325,6 +325,9 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
             public bool HadOnced(int nodeId)
                 => OnceStatement.Contains(nodeId);
 
+            public bool Onced(int nodeId)
+                => OnceStatement.Add(nodeId);
+
             #endregion
 
             #region Variables Methods

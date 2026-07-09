@@ -36,6 +36,32 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
     }
 
     [System.Serializable]
+    public sealed class POnceAttribute : IDialogueAttribute
+    {
+        private readonly List<TokenType> _allowedTokens = new()
+        {
+            TokenType.BlockDecl,
+            TokenType.Text,
+            TokenType.CrossText,
+            TokenType.At,
+            TokenType.Question,
+
+            TokenType.Goto,
+            TokenType.Return,
+            TokenType.Null,
+            TokenType.Set,
+        };
+
+        public void IsAllowed(Token token)
+        {
+            if (!_allowedTokens.Contains(token.Type))
+            {
+                throw new UnmatchedAttributeException(this, token);
+            }
+        }
+    }
+
+    [System.Serializable]
     public sealed class CycleAttribute : IDialogueAttribute
     {
         private readonly List<TokenType> _allowedTokens = new()

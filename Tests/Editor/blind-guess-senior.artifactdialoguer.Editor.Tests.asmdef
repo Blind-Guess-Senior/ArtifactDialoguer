@@ -2,8 +2,8 @@
   "name": "blind-guess-senior.artifactdialoguer.Editor.Tests",
   "rootNamespace": "BlindGuessSenior.ArtifactDialoguer.Tests.Editor",
   "references": [
-    "UnityEditor.TestRunner",
-    "blind-guess-senior.artifactdialoguer"
+    "GUID:0acc523941302664db1f4e527237feb3",
+    "GUID:4930306c7c88c2f43a6568de529d9fd9"
   ],
   "includePlatforms": [
     "Editor"

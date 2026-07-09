@@ -73,7 +73,8 @@ Namespace
   // ::前后允许任意数量空格
   ```
 
-  组织和划分不同的对话内容域，Block 和 Variable 在同一 Namespace 通用。一个 Namespace 声明将会作用于其之后的所有内容，直到遇到新的
+  组织和划分不同的对话内容域，Block、Variable 和 `[once]` 触发记录在同一 Namespace 内共享。一个 Namespace
+  声明将会作用于其之后的所有内容，直到遇到新的
   Namespace 声明或文件结束。Namespace 的名称内部不允许存在空格。
 
   每个语句都必须有所属的Namespace。
@@ -255,11 +256,12 @@ Namespace
       [if hasA == true] 这句话只在 hasA 是 true 的时候才会显示
       ```
 
-    - `once`: 可用于 Block Speaker Text Option Command，标记该语句/语句块仅呈现一次。
+    - `once`: 可用于 Block Speaker Text Option Command，标记该语句/语句块在整个 Namespace 内仅呈现一次。
+      如果同一 Namespace 有多个 `DialogueRunner`，任意一个 Runner 触发过该节点后，其它 Runner 也不会再次呈现它。
 
       ```text
       [once] oncedBlock:
-      这个块内都只会出现一次
+      这个块在当前 Namespace 内只会出现一次
       [set hasA = false]
       
       anotherBlock:
@@ -273,6 +275,22 @@ Namespace
       [once] ? 这个选项只能选一次 -> [goto winBlock]
       ? 这个选项可以选很多次 -> [goto loseBlock]
       ```
+
+    - `ponce`: 可用于 Block Speaker Text Option Command，标记该语句/语句块对每个 `DialogueRunner` 仅呈现一次。
+      它的记录不跨 Runner 共享；不同 Runner 运行同一 Namespace 时，可以各自触发一次。
+
+      ```text
+      [ponce] @ villager
+      这段话对当前 Runner 只会出现一次
+      另一个 Runner 仍然可以看到一次
+      
+      [ponce] ? 这个选项每个 Runner 只能选一次 -> [null]
+      ```
+
+      尽管是不推荐的写法，但将 `once` 和 `ponce` 同时作用于一个语句会得到正确的结果，即二者都被判定为触发。
+
+      注意：如果 `ponce` 出现在一个 `once` 作用域的内部，那么其行为是不可预期的(`ponce`不一定会触发)。反之(`once` 出现在
+      `ponce` 的内部)的行为是可预期的。
 
     - `cycle`: 仅用于 Block，标识该 Block 是循环对话，该 Block 结束后，自然流（Natural Flow）将会流向自己。
 
@@ -291,7 +309,9 @@ Namespace
       什么！你居然拿到了圣剑？！
       ```
 
-  Attribute 的顺序不影响解析，`if` Attribute一定最先解析。如果未满足 `if` 的条件，`once` 不会被触发。
+  Attribute 的顺序不影响解析，`if` Attribute一定最先解析。如果未满足 `if` 的条件，`once` 和 `ponce` 不会被触发。
+
+  `once` 的解析在 `ponce` 之前。但 `once` 不会阻止 `ponce` 的解析。
 
   `cycle` 与 `unreach` 互斥。
 
@@ -357,7 +377,7 @@ Namespace
 
 - **`DialogueRuntimeResultOptionsGot`**:
 
-  读取到选项组。选项组中仅包含属性检验通过的选项。如 `if` 判定不通过、已经选取过的 `[once]` 选项不会出现。
+  读取到选项组。选项组中仅包含属性检验通过的选项。如 `if` 判定不通过、已经选取过的 `[once]` 或 `[ponce]` 选项不会出现。
 
   ```text
     public List<DialogueRuntimeResultOption> Option;
@@ -400,11 +420,12 @@ Namespace
 
 ### TODOs:
 
-- FIX: variable
-- save support
+- save support - exit game / scene switch
 - complex arithmetic expression
 - re-add compile flagged feature support
 - var use before definition check
 - extcall support
 - unchosen option support (by command like \[empty\])
--
+- escape character support
+- debug utils fix
+- 

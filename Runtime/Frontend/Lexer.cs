@@ -155,6 +155,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
             { "set", TokenType.Set },
 
             { "once", TokenType.Attribute },
+            { "ponce", TokenType.Attribute },
             { "unreach", TokenType.Attribute },
             { "cycle", TokenType.Attribute },
 

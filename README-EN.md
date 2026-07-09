@@ -78,7 +78,8 @@ Detailed syntax rules for dialogue files:
   // Any amount of whitespace is allowed around ::
   ```
 
-  Organizes and groups different conversational scopes. Blocks and Variables are shared within the same Namespace. A
+  Organizes and groups different conversational scopes. Blocks, Variables, and `[once]` trigger records are shared
+  within the same Namespace. A
   Namespace declaration affects everything that follows until a new Namespace declaration or the end of the file. Spaces
   are not allowed within the Namespace name itself.
 
@@ -273,11 +274,12 @@ Detailed syntax rules for dialogue files:
       ```
 
     - `once`: Can be used on Blocks, Speakers, Text, Options, and Commands. Marks that this statement/block can only
-      ever trigger/present once.
+      trigger/present once across the entire Namespace. If multiple `DialogueRunner` instances use the same Namespace,
+      once one Runner triggers the node, the other Runners will not present it again.
 
       ```text
       [once] oncedBlock:
-      Every statement within this block only happens once.
+      This block only appears once in the current Namespace.
       [set hasA = false]
       
       anotherBlock:
@@ -291,6 +293,24 @@ Detailed syntax rules for dialogue files:
       [once] ? You can only pick this option once -> [goto winBlock]
       ? You can pick this repeatedly -> [goto loseBlock]
       ```
+
+    - `ponce`: Can be used on Blocks, Speakers, Text, Options, and Commands. Marks that this statement/block can only
+      trigger/present once per `DialogueRunner`. Its record is not shared across Runners; different Runners using the
+      same Namespace can each trigger it once.
+
+      ```text
+      [ponce] @ villager
+      This line appears once for the current Runner.
+      Another Runner can still see it once.
+      
+      [ponce] ? This option can be picked once per Runner -> [null]
+      ```
+
+      Although this style is not recommended, applying both `once` and `ponce` to the same statement still produces the
+      correct result: both attributes are considered triggered.
+
+      Note: if `ponce` appears inside a `once` scope, its behavior is not guaranteed (`ponce` may not be triggered). The
+      reverse case (`once` inside `ponce`) has predictable behavior.
 
     - `cycle`: Used only for Blocks. Indicates that the natural flow of this block will loop back unto itself upon
       completion.
@@ -311,7 +331,10 @@ Detailed syntax rules for dialogue files:
       ```
 
   Attribute parsing order does not matter, but `if` attributes are always evaluated first. If an `if` condition fails,
-  `once` triggers won't be consumed.
+  `once` and `ponce` triggers won't be consumed.
+
+  `once` is evaluated before `ponce`, but `once` does not prevent `ponce` from being evaluated.
+
   `cycle` and `unreach` are mutually exclusive.
 
 ## 3. Compiling Dialogue Files
@@ -378,7 +401,8 @@ You can query the exact result type with the `public Type ResultType` property.
 
 - **`DialogueRuntimeResultOptionsGot`**:
 
-  Received valid options. Any option failing its `if` condition or consumed `[once]` parameter will not be listed.
+  Received valid options. Any option failing its `if` condition or consumed `[once]` or `[ponce]` parameter will not be
+  listed.
 
   ```text
     public List<DialogueRuntimeResultOption> Option;
@@ -418,11 +442,13 @@ You can query the exact result type with the `public Type ResultType` property.
 
 ### TODOs:
 
-- FIX: variable
-- save support
+- save support - exit game / scene switch
 - Complex arithmetic expression
 - Re-add compile flagged feature support
 - Var use before definition check
 - Extcall support
 - Unchosen option support (by command like \[empty\])
+- escape character support
+- debug utils fix
+- 
 

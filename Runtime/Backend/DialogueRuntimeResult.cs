@@ -57,15 +57,17 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
         public string Text;
         public readonly CommandNode Command;
         public readonly bool Once;
+        public readonly bool POnce;
         public readonly OptionOfNode Node;
 
         public DialogueRuntimeResultOption(int index, string text, CommandNode command, OptionOfNode node,
-            bool once = false)
+            bool pOnce = false, bool once = false)
         {
             Index = index;
             Text = text;
             Command = command;
             Node = node;
+            POnce = pOnce;
             Once = once;
         }
     }

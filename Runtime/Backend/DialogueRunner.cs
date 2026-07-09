@@ -118,6 +118,8 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
         {
             while (true)
             {
+                var anyOnced = false;
+
                 if (_dialogueRunnerState.IsOptionContext)
                 {
                     return new DialogueRuntimeResultNextDenied();
@@ -164,12 +166,27 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
 
                     if (_dialogueRunnerState.CurrentBlock.Attributes?.Any(attr => attr is OnceAttribute) ?? false)
                     {
+                        if (!_namespacedState.Onced(_dialogueRunnerState.CurrentBlock.NodeId))
+                        {
+                            _dialogueRunnerState.CurrentBlock = _dialogueRunnerState.CurrentBlock.NaturalNext;
+                            _dialogueRunnerState.CurrentBlockStatementIndex = 0;
+                            anyOnced = true;
+                        }
+                    }
+
+                    if (_dialogueRunnerState.CurrentBlock.Attributes?.Any(attr => attr is POnceAttribute) ?? false)
+                    {
                         if (!_dialogueRunnerState.POnceStatement.Add(_dialogueRunnerState.CurrentBlock.NodeId))
                         {
                             _dialogueRunnerState.CurrentBlock = _dialogueRunnerState.CurrentBlock.NaturalNext;
                             _dialogueRunnerState.CurrentBlockStatementIndex = 0;
-                            goto Continue;
+                            anyOnced = true;
                         }
+                    }
+
+                    if (anyOnced)
+                    {
+                        goto Continue;
                     }
                 }
 
@@ -193,128 +210,169 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
                     goto Continue;
                 }
 
+                anyOnced = false;
                 if (statement.Attributes?.Any(attr => attr is OnceAttribute) ?? false)
                 {
-                    if (!_dialogueRunnerState.POnceStatement.Add(statement.NodeId)) // Found got once
+                    if (!_namespacedState.Onced(statement.NodeId)) // Found got once
                     {
-                        switch (statement)
-                        {
-                            case SpeakerNode: // Special check for skip whole speaker
-                                while (true)
-                                {
-                                    if (_dialogueRunnerState.CurrentBlockStatementIndex >=
-                                        _dialogueRunnerState.CurrentBlock.Statements.Count)
-                                    {
-                                        return new DialogueRuntimeResultBlockEnd();
-                                    }
-
-                                    if (_dialogueRunnerState.CurrentBlock.Statements[
-                                            _dialogueRunnerState.CurrentBlockStatementIndex] is
-                                        SpeakerNode)
-                                    {
-                                        break;
-                                    }
-
-                                    _dialogueRunnerState.CurrentBlockStatementIndex++;
-                                }
-
-                                break;
-                        }
-
-                        goto Continue;
+                        anyOnced = true;
                     }
                 }
 
-                StatementActions:
-                switch (statement)
+                if (statement.Attributes?.Any(attr => attr is POnceAttribute) ?? false)
                 {
-                    case SpeakerNode:
-                        goto Continue;
-                    case TextNode textNode:
-                        return new DialogueRuntimeResultTextGot(textNode.Speaker, textNode.Content);
-                    case CrossTextNode crossTextNode:
-                        if (!_dialogueRunnerState.IsCrossTextContext)
-                        {
-                            _dialogueRunnerState.IsCrossTextContext = true;
-                            _dialogueRunnerState.CurrentCrossTextIndex = 0;
-                            _dialogueRunnerState.CurrentCrossTextStatementIndex =
-                                _dialogueRunnerState.CurrentBlockStatementIndex - 1;
-                        }
+                    if (!_dialogueRunnerState.POnceStatement.Add(statement.NodeId)) // Found got ponce
+                    {
+                        anyOnced = true;
+                    }
+                }
 
-                        if (_dialogueRunnerState.CurrentCrossTextIndex >= crossTextNode.Contents.Count)
-                        {
-                            _dialogueRunnerState.IsCrossTextContext = false;
+                if (anyOnced)
+                {
+                    goto SpeakerActions;
+                }
+
+                StatementActions:
+                {
+                    switch (statement)
+                    {
+                        case SpeakerNode:
                             goto Continue;
-                        }
-
-                        var append = crossTextNode.Contents[_dialogueRunnerState.CurrentCrossTextIndex];
-                        var content = string.Join('\n',
-                            crossTextNode.Contents.Take(_dialogueRunnerState.CurrentCrossTextIndex + 1));
-                        _dialogueRunnerState.CurrentCrossTextIndex++;
-                        return new DialogueRuntimeResultTextAppend(crossTextNode.Speaker, append, content);
-                    case GotoCommandNode gotoCommandNode:
-                        _dialogueRunnerState.CallStackPush();
-
-                        _dialogueRunnerState.CurrentBlock = gotoCommandNode.ToBlock;
-                        _dialogueRunnerState.CurrentBlockStatementIndex = 0;
-
-                        goto Continue;
-                    case RetCommandNode:
-                        if (_dialogueRunnerState.CallStack.Count == 0)
-                        {
-                            break;
-                        }
-
-                        var ret = _dialogueRunnerState.CallStackPop();
-                        _dialogueRunnerState.CurrentBlock = ret.Item1;
-                        _dialogueRunnerState.CurrentBlockStatementIndex = ret.Item2;
-
-                        goto Continue;
-                    case NullCommandNode:
-                        goto Continue;
-                    case SetCommandNode setCommandNode:
-                        // TODO: complex value expression
-                        var targetVar = setCommandNode.TargetVar;
-                        var result = EvaluateExpression(setCommandNode.ValueExpr);
-                        _namespacedState.SetVariable(targetVar, result);
-
-                        goto Continue;
-                    case OptionsNode optionsNode:
-                        List<DialogueRuntimeResultOption> options = new();
-
-                        var index = 0;
-                        foreach (var option in optionsNode.Options)
-                        {
-                            var attr = option.Attributes;
-                            conditions = attr.OfType<IfAttribute>().ToList();
-                            if (!CheckConditions(conditions))
+                        case TextNode textNode:
+                            return new DialogueRuntimeResultTextGot(textNode.Speaker, textNode.Content);
+                        case CrossTextNode crossTextNode:
+                            if (!_dialogueRunnerState.IsCrossTextContext)
                             {
-                                continue;
+                                _dialogueRunnerState.IsCrossTextContext = true;
+                                _dialogueRunnerState.CurrentCrossTextIndex = 0;
+                                _dialogueRunnerState.CurrentCrossTextStatementIndex =
+                                    _dialogueRunnerState.CurrentBlockStatementIndex - 1;
                             }
 
-                            if (attr.Any(att => att is OnceAttribute))
+                            if (_dialogueRunnerState.CurrentCrossTextIndex >= crossTextNode.Contents.Count)
                             {
-                                if (_dialogueRunnerState.POnceStatement.Contains(option.NodeId))
+                                _dialogueRunnerState.IsCrossTextContext = false;
+                                goto Continue;
+                            }
+
+                            var append = crossTextNode.Contents[_dialogueRunnerState.CurrentCrossTextIndex];
+                            var content = string.Join('\n',
+                                crossTextNode.Contents.Take(_dialogueRunnerState.CurrentCrossTextIndex + 1));
+                            _dialogueRunnerState.CurrentCrossTextIndex++;
+                            return new DialogueRuntimeResultTextAppend(crossTextNode.Speaker, append, content);
+                        case GotoCommandNode gotoCommandNode:
+                            _dialogueRunnerState.CallStackPush();
+
+                            _dialogueRunnerState.CurrentBlock = gotoCommandNode.ToBlock;
+                            _dialogueRunnerState.CurrentBlockStatementIndex = 0;
+
+                            goto Continue;
+                        case RetCommandNode:
+                            if (_dialogueRunnerState.CallStack.Count == 0)
+                            {
+                                break;
+                            }
+
+                            var ret = _dialogueRunnerState.CallStackPop();
+                            _dialogueRunnerState.CurrentBlock = ret.Item1;
+                            _dialogueRunnerState.CurrentBlockStatementIndex = ret.Item2;
+
+                            goto Continue;
+                        case NullCommandNode:
+                            goto Continue;
+                        case SetCommandNode setCommandNode:
+                            // TODO: complex value expression
+                            var targetVar = setCommandNode.TargetVar;
+                            var result = EvaluateExpression(setCommandNode.ValueExpr);
+                            _namespacedState.SetVariable(targetVar, result);
+
+                            goto Continue;
+                        case OptionsNode optionsNode:
+                            List<DialogueRuntimeResultOption> options = new();
+
+                            var index = 0;
+                            foreach (var option in optionsNode.Options)
+                            {
+                                var attr = option.Attributes;
+                                conditions = attr.OfType<IfAttribute>().ToList();
+                                if (!CheckConditions(conditions))
                                 {
                                     continue;
                                 }
 
+                                anyOnced = false;
+                                var onced = false;
+                                var pOnced = false;
+                                if (attr.Any(att => att is OnceAttribute))
+                                {
+                                    if (_namespacedState.HadOnced(option.NodeId))
+                                    {
+                                        continue;
+                                    }
+
+                                    anyOnced = true;
+                                    onced = true;
+                                }
+
+                                if (attr.Any(att => att is POnceAttribute))
+                                {
+                                    if (_dialogueRunnerState.POnceStatement.Contains(option.NodeId))
+                                    {
+                                        continue;
+                                    }
+
+                                    anyOnced = true;
+                                    pOnced = true;
+                                }
+
+                                if (anyOnced)
+                                {
+                                    options.Add(new DialogueRuntimeResultOption(index++, option.DisplayContent,
+                                        option.Command, option, pOnced, onced));
+                                    continue;
+                                }
+
                                 options.Add(new DialogueRuntimeResultOption(index++, option.DisplayContent,
-                                    option.Command, option, true));
-                                continue;
+                                    option.Command, option));
                             }
 
-                            options.Add(new DialogueRuntimeResultOption(index++, option.DisplayContent,
-                                option.Command, option));
-                        }
+                            _dialogueRunnerState.IsOptionContext = true;
+                            _currentOptionList = options;
 
-                        _dialogueRunnerState.IsOptionContext = true;
-                        _currentOptionList = options;
+                            return new DialogueRuntimeResultOptionsGot(options);
+                    }
 
-                        return new DialogueRuntimeResultOptionsGot(options);
+                    return new DialogueRuntimeResultDialogueEnd();
                 }
 
-                return new DialogueRuntimeResultDialogueEnd();
+                SpeakerActions:
+                {
+                    switch (statement)
+                    {
+                        case SpeakerNode: // Special check for skip whole speaker
+                            while (true)
+                            {
+                                if (_dialogueRunnerState.CurrentBlockStatementIndex >=
+                                    _dialogueRunnerState.CurrentBlock.Statements.Count)
+                                {
+                                    return new DialogueRuntimeResultBlockEnd();
+                                }
+
+                                if (_dialogueRunnerState.CurrentBlock.Statements[
+                                        _dialogueRunnerState.CurrentBlockStatementIndex] is
+                                    SpeakerNode)
+                                {
+                                    break;
+                                }
+
+                                _dialogueRunnerState.CurrentBlockStatementIndex++;
+                            }
+
+                            break;
+                    }
+
+                    goto Continue;
+                }
 
                 Continue: ;
             }
@@ -337,6 +395,11 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
             var chosenOption = _currentOptionList[index];
 
             if (chosenOption.Once)
+            {
+                _namespacedState.Onced(chosenOption.Node.NodeId);
+            }
+
+            if (chosenOption.POnce)
             {
                 _dialogueRunnerState.POnceStatement.Add(chosenOption.Node.NodeId);
             }

@@ -181,7 +181,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         private int _position;
 
         /// <summary>
-        /// Current token (will be consume when Advance())
+        /// Current token (will be consumed when <see cref="Advance"/>)
         /// </summary>
         private Token _currentToken;
 
@@ -193,6 +193,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
         private readonly Dictionary<string, Type> _attributesMap = new()
         {
             { "once", typeof(OnceAttribute) },
+            { "ponce", typeof(POnceAttribute) },
             { "cycle", typeof(CycleAttribute) },
             { "unreach", typeof(UnreachAttribute) },
         };
