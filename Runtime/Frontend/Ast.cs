@@ -203,7 +203,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
     [System.Serializable]
     public sealed class NullCommandNode : CommandNode
     {
-        public NullCommandNode(int nodeId) : base(nodeId, null)
+        public NullCommandNode(int nodeId) : base(nodeId, new List<IDialogueAttribute>())
         {
         }
     }
@@ -296,7 +296,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
 
         #region Constructor
 
-        protected GenericTextNode(int nodeId, string speaker) : base(nodeId, null)
+        protected GenericTextNode(int nodeId, string speaker) : base(nodeId, new List<IDialogueAttribute>())
         {
             Speaker = speaker;
         }
@@ -380,7 +380,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
 
         #region Constructors
 
-        public OptionsNode(int nodeId) : base(nodeId, null)
+        public OptionsNode(int nodeId) : base(nodeId, new List<IDialogueAttribute>())
         {
         }
 

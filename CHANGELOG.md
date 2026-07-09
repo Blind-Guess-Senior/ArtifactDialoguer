@@ -9,13 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Editor config for this project.
-- `ponce` attribute, which controls behavior like `once` but only take effect in each runner respectively.
+- 
 
 ### Fixed
 
-- Now variables will correctly shared between runners with same namespace.
-- Now `Once` attribute will correctly shared between runners with same namespace.
+- 
 
 ### Changed
 
@@ -23,7 +21,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- Marked current save methods as `Obsolete`.
+- 
+
+## [0.4.0] - 2026-07-09
+
+### Added
+
+- Editor config for this project.
+- `ponce` attribute, which controls behavior like `once` but only take effect in each runner respectively.
+
+### Fixed
+
+- Now variables will correctly shared between runners with same namespace.
+- Now `Once` attribute will correctly shared between runners with same namespace.
+- Now statements that shouldn't have attributes will has an empty attribute list rather than `null`.
+
+### Removed
+
+- Marked current save methods as `Obsolete`. Now there is no saving support.
 
 ## [0.3.1] - 2026-07-09
 

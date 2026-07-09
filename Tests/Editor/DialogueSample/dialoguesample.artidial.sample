@@ -10,7 +10,7 @@ start:
 secondDialogue:
 @ villager1
 一些 没那么废话的话:
-[once] 这句话只会出现一次
+[once] 这句话只会 出现一次
 
 [once] @ villager1
 这一大段都
@@ -26,6 +26,10 @@ secondDialogue:
 
 @ player
 some text
+This Texts Should Be One Token
+[if hasA == 111] This Texts Should Not Be One Token
+[if hasA == 111] 
+This Texts Should Be One Token Too
 [if hasA == 111] ? 选项 1 -> [null]
 [if hasB == true] ? 选项 2 -> [goto secondDialogue]
 [once] [if hasA == hasB] ? [empty] -> [if hasA == 1.1] [goto ifcond2]
