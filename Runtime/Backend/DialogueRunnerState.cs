@@ -4,7 +4,6 @@ using System.Xml.Serialization;
 using BlindGuessSenior.ArtifactDialoguer.Frontend;
 using BlindGuessSenior.ArtifactDialoguer.Utilities.DebugUtils;
 using Newtonsoft.Json;
-using Unity.VisualScripting.YamlDotNet.Serialization;
 
 namespace BlindGuessSenior.ArtifactDialoguer.Backend
 {
@@ -51,7 +50,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
         /// <summary>
         /// Current block node. Runtime field.
         /// </summary>
-        [NonSerialized] [JsonIgnore] [XmlIgnore] [YamlIgnore]
+        [NonSerialized] [JsonIgnore] [XmlIgnore]
         public BlockNode CurrentBlock;
 
         /// <summary>
@@ -86,13 +85,13 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
         /// <br/>
         /// Distinguish by node's id.
         /// </summary>
-        [NonSerialized] [JsonIgnore] [XmlIgnore] [YamlIgnore]
+        [NonSerialized] [JsonIgnore] [XmlIgnore]
         public HashSet<int> POnceStatement;
 
         /// <summary>
         /// Call stack to support goto and ret.
         /// </summary>
-        [NonSerialized] [JsonIgnore] [XmlIgnore] [YamlIgnore]
+        [NonSerialized] [JsonIgnore] [XmlIgnore]
         public Stack<CallStackEntry> CallStack;
 
         #endregion
@@ -309,13 +308,13 @@ namespace BlindGuessSenior.ArtifactDialoguer.Backend
             /// <summary>
             /// Saved statements that has been 'once'. Distinguish by node's id.
             /// </summary>
-            [NonSerialized] [JsonIgnore] [XmlIgnore] [YamlIgnore]
+            [NonSerialized] [JsonIgnore] [XmlIgnore]
             private readonly HashSet<int> OnceStatement = new();
 
             /// <summary>
             /// Saved variables.
             /// </summary>
-            [NonSerialized] [JsonIgnore] [XmlIgnore] [YamlIgnore]
+            [NonSerialized] [JsonIgnore] [XmlIgnore]
             private readonly Dictionary<string, ExpressionEvaluateResult> Variables = new();
 
             #endregion
