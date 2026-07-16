@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using BlindGuessSenior.ArtifactDialoguer.Utilities.DebugUtils;
 using BlindGuessSenior.ArtifactDialoguer.Utilities.Exceptions;
-using NUnit.Framework;
 
 namespace BlindGuessSenior.ArtifactDialoguer.Frontend
 {
@@ -726,7 +725,7 @@ namespace BlindGuessSenior.ArtifactDialoguer.Frontend
                 {
                     var attrToken = Advance();
 
-                    Assert.IsTrue(_attributesMap.ContainsKey(attrToken.Literal));
+                    // Assert.IsTrue(_attributesMap.ContainsKey(attrToken.Literal));
 
                     var attrType = _attributesMap[attrToken.Literal];
 
